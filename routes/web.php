@@ -2,19 +2,68 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TenantSwitchController;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Route::get('/', function () {
+//     return view('welcome');
+// });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Route::get('/dashboard', function () {
+//     return view('dashboard');
+// })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});
+// Route::middleware('auth')->group(function () {
+//     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+//     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+//     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+// });
 
-require __DIR__.'/auth.php';
+// require __DIR__.'/auth.php';
+
+// ----- Landlord (central) -----
+Route::get('/', fn () => view('welcome'))->name('home');
+
+// Breeze landlord auth (default names: login, register, etc.)
+if (file_exists(__DIR__.'/auth.php')) {
+    require __DIR__.'/auth.php';
+}
+
+// Example landlord dashboard (optional)
+Route::middleware(['auth', 'verified'])->get('/admin', function () {
+    return 'Landlord dashboard';
+})->name('landlord.dashboard');
+
+// ----- Tenant -----
+Route::prefix('{tenant}')
+    ->middleware(['tenant', 'tenant.defaults'])
+    ->group(function () {
+        // Tenant-auth routes (prefixed names to avoid clashes with landlord)
+        if (file_exists(__DIR__.'/tenant_auth.php')) {
+            require __DIR__.'/tenant_auth.php';
+        }
+
+        Route::middleware(['auth', 'verified'])->get('/dashboard', function () {
+            return 'Tenant dashboard for '.tenant('id');
+        })->name('tenant.dashboard');
+    });
+
+// Central landing shows tenant switcher
+Route::get('/', [TenantSwitchController::class, 'index'])->name('home');
+
+// Handle manual entry of a tenant id and redirect to /{tenant}/login
+Route::post('/tenant/switch', [TenantSwitchController::class, 'switch'])
+    ->name('tenant.switch');
+
+// Your existing tenant group stays as-is. Example:
+Route::prefix('{tenant}')
+    ->middleware(['tenant', 'tenant.defaults'])
+    ->group(function () {
+        if (file_exists(__DIR__.'/tenant_auth.php')) {
+            require __DIR__.'/tenant_auth.php';
+        }
+
+        Route::middleware(['auth', 'verified'])
+            ->get('/dashboard', fn () => 'Tenant dashboard for '.tenant('id'))
+            ->name('tenant.dashboard');
+    });
+
