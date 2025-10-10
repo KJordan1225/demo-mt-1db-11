@@ -13,14 +13,22 @@ return new class extends Migration
     {
         // users
         Schema::table('users', function (Blueprint $table) {
-            $table->string('tenant_id')->index()->after('id');
+            $table->string('tenant_id')
+                ->index()
+                ->nullable()
+                ->default(null)
+                ->after('id');
             // optional: enforce tenant-unique email
             $table->unique(['tenant_id', 'email']);
         });
 
         // password_reset_tokens
         Schema::table('password_reset_tokens', function (Blueprint $table) {
-            $table->string('tenant_id')->index()->after('email');
+            $table->string('tenant_id')
+                ->index()
+                ->nullable()
+                ->default(null)
+                ->after('email');
             // NOTE: This table already has a PRIMARY KEY on 'email'.
             // If you want per-tenant uniqueness instead, you would need to
             // drop the existing primary and create a composite primary:
@@ -31,7 +39,11 @@ return new class extends Migration
 
         // sessions
         Schema::table('sessions', function (Blueprint $table) {
-            $table->string('tenant_id')->index()->after('id');
+            $table->string('tenant_id')
+                ->index()
+                ->nullable()
+                ->default(null)
+                ->after('id');
             // You can also make (tenant_id, user_id) a composite index if useful for lookups:
             $table->index(['tenant_id', 'user_id']);
         });
