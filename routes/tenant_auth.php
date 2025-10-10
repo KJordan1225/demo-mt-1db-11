@@ -24,10 +24,11 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 // Guest (not authenticated)
 Route::middleware('guest')->group(function () {
     // Register
-    Route::get('register', [RegisteredUserController::class, 'create'])
+    Route::get('register', [RegisteredUserController::class, 'tenantCreate'])
         ->name('tenant.register');
-    Route::post('register', [RegisteredUserController::class, 'store']);
-
+    Route::post('register', [RegisteredUserController::class, 'tenantStore'])
+        ->name('tenant.register');
+        
     // Login
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('tenant.login');

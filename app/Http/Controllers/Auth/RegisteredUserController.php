@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
+use Illuminate\Validation\Rule;
 
 class RegisteredUserController extends Controller
 {
@@ -20,6 +21,11 @@ class RegisteredUserController extends Controller
     public function create(): View
     {
         return view('auth.register');
+    }
+
+    public function tenantCreate(): View
+    {
+        return view('auth.tenant.register');
     }
 
     /**
@@ -47,4 +53,36 @@ class RegisteredUserController extends Controller
 
         return redirect(route('dashboard', absolute: false));
     }
+
+    public function tenantStore(Request $request): RedirectResponse
+    {
+        // Ensure we're inside a tenant context
+        abort_if(! tenant(), 404, 'No tenant context');
+
+        $tenantId = tenant('id'); // or: optional(tenant())->getTenantKey()
+
+        $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => [
+                'required', 'string', 'lowercase', 'email', 'max:255',
+                // Uniqueness per-tenant
+                Rule::unique('users', 'email')->where('tenant_id', $tenantId),
+            ],
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ]);
+
+        $user = User::create([
+            'tenant_id' => $tenantId,                 // ⬅️ make it tenant-aware
+            'name'      => $request->name,
+            'email'     => strtolower($request->email),
+            'password'  => Hash::make($request->password),
+        ]);
+
+        event(new Registered($user));
+        Auth::login($user);
+
+        return redirect(route('dashboard', absolute: false));
+    }
+
+
 }

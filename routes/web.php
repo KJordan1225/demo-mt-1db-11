@@ -54,9 +54,19 @@ Route::get('/', [TenantSwitchController::class, 'index'])->name('home');
 Route::post('/tenant/switch', [TenantSwitchController::class, 'switch'])
     ->name('tenant.switch');
 
+// Landlord (central) dashboard
+Route::middleware(['auth','verified'])
+    ->get('/dashboard', fn () => view('dashboard'))  // or return 'Landlord dashboard'
+    ->name('dashboard');
+
+// Landlord (central) profile.edit`
+Route::middleware(['auth','verified'])
+    ->get('/profile/edit', [ProfileController::class, 'edit'])
+    ->name('profile.edit');
+
 // Your existing tenant group stays as-is. Example:
 Route::prefix('{tenant}')
-    ->middleware(['tenant', 'tenant.defaults'])
+    ->middleware(['web', 'tenant', 'tenant.defaults'])
     ->group(function () {
         if (file_exists(__DIR__.'/tenant_auth.php')) {
             require __DIR__.'/tenant_auth.php';
