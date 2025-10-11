@@ -28,8 +28,13 @@ Route::prefix('{tenant}')
             require __DIR__.'/tenant_auth.php';
         }
 
-        Route::get('/', fn () => redirect()->route('tenant.dashboard', ['tenant' => tenant('id')]))
-            ->name('tenant.home');
+        // Route::get('/', fn () => redirect()->route('tenant.landing', ['tenant' => tenant('id')]))
+        //     ->name('tenant.home');
+
+        // routes/web.php (inside your {tenant} + web + tenant middleware group)
+        Route::get('/', fn () => view('tenant.landing', ['tenant' => tenant('id')]))
+            ->name('tenant.landing');
+
 
         Route::middleware(['auth', 'verified'])
             ->get('/dashboard', [DashboardController::class, 'index'])
