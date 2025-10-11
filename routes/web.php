@@ -15,7 +15,8 @@ if (file_exists(__DIR__.'/auth.php')) {
 }
 
 // Example landlord dashboard (optional)
-Route::middleware(['auth', 'verified'])->get('/admin', function () {
+Route::middleware(['auth', 'verified'])
+    ->get('/admin', function () {
     return 'Landlord dashboard';
 })->name('landlord.dashboard');
 
@@ -50,13 +51,40 @@ Route::post('/tenant/switch', [TenantSwitchController::class, 'switch'])
 
 // Landlord (central) dashboard
 Route::middleware(['auth','verified'])
-    ->get('/dashboard', fn () => view('dashboard'))  // or return 'Landlord dashboard'
+    ->get('/landlord/dashboard', fn () => view('dashboard'))  // or return 'Landlord dashboard'
     ->name('dashboard');
 
 // Landlord (central) profile.edit`
 Route::middleware(['auth','verified'])
     ->get('/profile/edit', [ProfileController::class, 'edit'])
     ->name('profile.edit');
+
+// Landlord (central)
+Route::middleware(['web','ctx.tenant'])->group(function () {
+    Route::get('/landlord', function () {
+        abort_unless(auth()->check(), 401);
+        abort_unless(auth()->user()->hasRole('admin', null) || auth()->user()->hasRole('super-admin', null), 403);
+        return 'Landlord area';
+    })->name('landlord.home');
+});
+
+
+
+// Route::prefix('{tenant}')
+//     ->middleware(['web','tenant','ctx.tenant'])
+//     ->group(function () {
+//         Route::get('/dashboard', function (\Illuminate\Http\Request $request) {
+//             $tenantId = $request->attributes->get('tenantId');
+//             abort_unless(auth()->check(), 401);
+//             abort_unless(
+//                 auth()->user()->hasRole('user', $tenantId) || auth()->user()->hasRole('admin', $tenantId),
+//                 403
+//             );
+//             return 'Tenant dashboard: '.$tenantId;
+//         })->name('tenant.dashboard');
+//     });
+
+
 
 
 

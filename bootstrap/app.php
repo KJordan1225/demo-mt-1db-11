@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Foundation\Application;
+use App\Http\Middleware\AttachTenantContext;
 use App\Http\Middleware\SetTenantRouteDefaults;
 use App\Providers\TenantBrandingServiceProvider;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -22,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
             // Helper to auto-inject {tenant} into route() URLs while inside tenant pages
             'tenant.defaults' => SetTenantRouteDefaults::class,
             'universal'       => PreventAccessFromCentralDomains::class,
+            'ctx.tenant'      => AttachTenantContext::class,
         ]);
 
     })
