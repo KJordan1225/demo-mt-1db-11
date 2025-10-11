@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TenantSwitchController;
+use App\Http\Controllers\Tenant\DashboardController;
 
 // Route::get('/', function () {
 //     return view('welcome');
@@ -35,16 +36,19 @@ Route::middleware(['auth', 'verified'])->get('/admin', function () {
 
 // ----- Tenant -----
 Route::prefix('{tenant}')
-    ->middleware(['tenant', 'tenant.defaults'])
+    ->middleware(['web', 'tenant', 'tenant.defaults'])
     ->group(function () {
         // Tenant-auth routes (prefixed names to avoid clashes with landlord)
         if (file_exists(__DIR__.'/tenant_auth.php')) {
             require __DIR__.'/tenant_auth.php';
         }
 
-        Route::middleware(['auth', 'verified'])->get('/dashboard', function () {
-            return 'Tenant dashboard for '.tenant('id');
-        })->name('tenant.dashboard');
+        Route::get('/', fn () => redirect()->route('tenant.dashboard', ['tenant' => tenant('id')]))
+            ->name('tenant.home');
+
+        Route::middleware(['auth', 'verified'])
+            ->get('/dashboard', [DashboardController::class, 'index'])
+            ->name('tenant.dashboard');
     });
 
 // Central landing shows tenant switcher
@@ -64,16 +68,5 @@ Route::middleware(['auth','verified'])
     ->get('/profile/edit', [ProfileController::class, 'edit'])
     ->name('profile.edit');
 
-// Your existing tenant group stays as-is. Example:
-Route::prefix('{tenant}')
-    ->middleware(['web', 'tenant', 'tenant.defaults'])
-    ->group(function () {
-        if (file_exists(__DIR__.'/tenant_auth.php')) {
-            require __DIR__.'/tenant_auth.php';
-        }
 
-        Route::middleware(['auth', 'verified'])
-            ->get('/dashboard', fn () => 'Tenant dashboard for '.tenant('id'))
-            ->name('tenant.dashboard');
-    });
 
