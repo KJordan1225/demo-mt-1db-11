@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Stancl\Tenancy\Database\Models\Tenant;
+use App\Models\Tenant;
 
 class DemoTenantsSeeder extends Seeder
 {

@@ -1,7 +1,8 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TenantController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TenantSwitchController;
 use App\Http\Controllers\Tenant\DashboardController;
 use Stancl\Tenancy\Middleware\InitializeTenancyByPath;
@@ -14,11 +15,24 @@ if (file_exists(__DIR__.'/auth.php')) {
     require __DIR__.'/auth.php';
 }
 
+
 // Example landlord dashboard (optional)
 Route::middleware(['auth', 'verified'])
-    ->get('/admin', function () {
-    return 'Landlord dashboard';
-})->name('landlord.dashboard');
+    ->get('/admin', [TenantController::class, 'index'])
+    ->name('tenants.index');
+
+Route::middleware(['auth', 'verified'])
+    ->get('/admin/create', [TenantController::class, 'create'])
+    ->name('tenants.create');
+
+Route::middleware(['auth', 'verified'])
+    ->post('/admin/store', [TenantController::class, 'store'])
+    ->name('tenants.store');
+
+Route::delete('/admin/mass-destroy', [TenantController::class, 'massDestroy'])
+    ->name('tenants.massDestroy');
+
+
 
 // ----- Tenant -----
 Route::prefix('{tenant}')
@@ -48,11 +62,6 @@ Route::get('/', [TenantSwitchController::class, 'index'])->name('home');
 // Handle manual entry of a tenant id and redirect to /{tenant}/login
 Route::post('/tenant/switch', [TenantSwitchController::class, 'switch'])
     ->name('tenant.switch');
-
-// Landlord (central) dashboard
-Route::middleware(['auth','verified'])
-    ->get('/landlord/dashboard', fn () => view('dashboard'))  // or return 'Landlord dashboard'
-    ->name('dashboard');
 
 // Landlord (central) profile.edit`
 Route::middleware(['auth','verified'])

@@ -7,7 +7,7 @@ use Illuminate\Database\Seeder;
 use App\Models\Role;
 use App\Models\Permission;
 use App\Models\User;
-use Stancl\Tenancy\Database\Models\Tenant;
+use App\Models\Tenant;
 
 
 class RbacSeeder extends Seeder

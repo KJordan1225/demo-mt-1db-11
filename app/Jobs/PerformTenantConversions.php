@@ -5,7 +5,7 @@ namespace App\Jobs;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Stancl\Tenancy\Facades\Tenancy;
-use Stancl\Tenancy\Database\Models\Tenant as TenancyTenant;
+use App\Models\Tenant as TenancyTenant;
 use Spatie\MediaLibrary\MediaCollections\Jobs\PerformConversions as SpatiePerformConversions;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
