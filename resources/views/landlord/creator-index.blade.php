@@ -69,7 +69,7 @@
                                     <td>{{ $t['display_name'] ?? '—' }}</td>
                                     <td>{{ optional($t->created_at)->format('Y-m-d') }}</td>
                                     <td class="text-end">
-                                        <a href="#" class="btn btn-sm btn-outline-primary">
+                                        <a href="{{ route('tenants.edit', $t->id) }}" class="btn btn-sm btn-outline-primary">
                                             Edit
                                         </a>
                                     </td>

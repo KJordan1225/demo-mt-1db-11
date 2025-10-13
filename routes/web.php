@@ -15,6 +15,9 @@ if (file_exists(__DIR__.'/auth.php')) {
     require __DIR__.'/auth.php';
 }
 
+Route::middleware(['auth', 'verified'])
+            ->get('/dashboard', [DashboardController::class, 'index'])
+            ->name('dashboard');
 
 // Example landlord dashboard (optional)
 Route::middleware(['auth', 'verified'])
@@ -29,10 +32,17 @@ Route::middleware(['auth', 'verified'])
     ->post('/admin/store', [TenantController::class, 'store'])
     ->name('tenants.store');
 
-Route::delete('/admin/mass-destroy', [TenantController::class, 'massDestroy'])
+Route::middleware(['auth', 'verified'])
+    ->delete('/admin/mass-destroy', [TenantController::class, 'massDestroy'])
     ->name('tenants.massDestroy');
 
+Route::middleware(['auth', 'verified'])
+    ->get('/admin/{tenant}/edit', [TenantController::class, 'edit'])
+    ->name('tenants.edit');
 
+Route::middleware(['auth', 'verified'])
+    ->any('/admin/update/{tenant}', [TenantController::class, 'update'])
+    ->name('tenants.update');
 
 // ----- Tenant -----
 Route::prefix('{tenant}')

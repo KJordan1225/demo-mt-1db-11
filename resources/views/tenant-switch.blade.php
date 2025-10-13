@@ -71,7 +71,7 @@
     <div class="row">
         <a class="btn btn-primary" href="{{ route('login') }}">Landlord Login</a>
         <a class="btn" href="{{ route('register') }}">Landlord Register</a>
-        <a class="btn" href="{{ route('landlord.dashboard') }}">Landlord Dashboard</a>
+        <a class="btn" href="{{ route('tenants.index') }}">Landlord Dashboard</a>
     </div>
 </div>
 </body>
