@@ -15,34 +15,24 @@ if (file_exists(__DIR__.'/auth.php')) {
     require __DIR__.'/auth.php';
 }
 
-Route::middleware(['auth', 'verified'])
-            ->get('/dashboard', [DashboardController::class, 'index'])
-            ->name('dashboard');
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Dashboard
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->name('dashboard');
 
-// Example landlord dashboard (optional)
-Route::middleware(['auth', 'verified'])
-    ->get('/admin', [TenantController::class, 'index'])
-    ->name('tenants.index');
+    // Admin (landlord) routes
+    Route::prefix('admin')->name('tenants.')->controller(TenantController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/store', 'store')->name('store');
+        Route::delete('/mass-destroy', 'massDestroy')->name('massDestroy');
+        Route::get('/{tenant}/edit', 'edit')->name('edit');
+        Route::any('/update/{tenant}', 'update')->name('update'); // keep 'any' as in your original
+        // If you prefer RESTful verbs instead:
+        // Route::match(['put','patch'], '/{tenant}', 'update')->name('update');
+    });
+});
 
-Route::middleware(['auth', 'verified'])
-    ->get('/admin/create', [TenantController::class, 'create'])
-    ->name('tenants.create');
-
-Route::middleware(['auth', 'verified'])
-    ->post('/admin/store', [TenantController::class, 'store'])
-    ->name('tenants.store');
-
-Route::middleware(['auth', 'verified'])
-    ->delete('/admin/mass-destroy', [TenantController::class, 'massDestroy'])
-    ->name('tenants.massDestroy');
-
-Route::middleware(['auth', 'verified'])
-    ->get('/admin/{tenant}/edit', [TenantController::class, 'edit'])
-    ->name('tenants.edit');
-
-Route::middleware(['auth', 'verified'])
-    ->any('/admin/update/{tenant}', [TenantController::class, 'update'])
-    ->name('tenants.update');
 
 // ----- Tenant -----
 Route::prefix('{tenant}')
