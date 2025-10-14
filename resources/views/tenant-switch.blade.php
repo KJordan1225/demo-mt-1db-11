@@ -1,78 +1,175 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="h-100">
 <head>
     <meta charset="utf-8">
-    <title>Choose a Tenant</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>StarCity Starz</title>
+
+    {{-- Bootstrap 5 (replace with @vite if you bundle locally) --}}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <style>
-        body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 2rem; }
-        .wrap { max-width: 720px; margin: auto; }
-        h1 { margin-bottom: 1rem; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: .75rem; margin-top: 1rem; }
-        .card { border: 1px solid #e5e7eb; border-radius: .75rem; padding: .9rem; }
-        .muted { color: #6b7280; font-size: .9rem; }
-        .row { display: flex; gap: .5rem; margin-top: .75rem; }
-        .btn { display:inline-block; padding:.5rem .75rem; border-radius:.5rem; text-decoration:none; border:1px solid #e5e7eb; }
-        .btn-primary { background:#111827; color:#fff; border-color:#111827; }
-        .input { width:100%; padding:.5rem .6rem; border:1px solid #e5e7eb; border-radius:.5rem; }
-        .error { color: #b91c1c; margin-top: .25rem; font-size: .9rem; }
-        form { margin-top: 1rem; }
-        .or { text-align:center; color:#9ca3af; margin:1rem 0; }
+        :root{
+            --brand-primary: {{ e($branding['primary_color'] ?? '#6C2BD9') }};
+            --brand-accent:  {{ e($branding['accent_color']  ?? '#F59E0B') }};
+            --brand-bg:      {{ e($branding['bg_color']      ?? '#0F172A') }};
+            --brand-text:    {{ e($branding['text_color']    ?? '#E2E8F0') }};
+        }
+        body { background: #f8f9fa; }
+        .brand-pane {
+            background: var(--brand-primary);
+            color: var(--brand-bg);
+        }
+        .brand-title {
+            letter-spacing: .5px;
+        }
+        .auth-card {
+            max-width: 460px;
+            width: 100%;
+        }
+        .btn-brand {
+            background: var(--brand-primary);
+            color: #fff;
+        }
+        .btn-brand:hover {
+            filter: brightness(.95);
+            color: #fff;
+        }
+        .link-brand {
+            color: var(--brand-primary) !important;
+            text-decoration: none;
+        }
+        .link-brand:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
-<body>
-<div class="wrap">
-    <h1>Choose a Tenant</h1>
-    <p class="muted">Pick an existing tenant below, or type a tenant ID to go to its login.</p>
+<body class="min-vh-100 d-flex">
 
-    {{-- Quick search/entry --}}
-    <form method="POST" action="{{ route('tenant.switch') }}">
-        @csrf
-        <label for="tenant" class="muted">Enter tenant ID (e.g., <code>alpha</code>)</label>
-        <div class="row">
-            <input id="tenant" name="tenant" class="input" placeholder="alpha" value="{{ old('tenant') }}">
-            <button class="btn btn-primary" type="submit">Go to login</button>
-        </div>
-        @error('tenant') <div class="error">{{ $message }}</div> @enderror
-    </form>
+    <div class="container-fluid g-0 flex-fill">
+        <div class="row g-0 min-vh-100">
 
-    <div class="or">— or —</div>
+            {{-- LEFT HALF (hidden on mobile) --}}
+            <div class="col-lg-6 d-none d-lg-flex brand-pane align-items-center justify-content-center">
+                <div class="text-center px-4">
+                    @if(($branding['logo_url'] ?? null))
+                        <img src="{{ $branding['logo_url'] }}" alt="Logo"
+                             class="mb-4" style="height:64px;width:64px;object-fit:cover;border-radius:.75rem;">
+                    @endif
 
-    {{-- Cards of known tenants --}}
-    <div class="grid">
-        @forelse($tenants as $t)
-            @php
-                // Optional: show a friendly name if stored in $t->data['name']
-                $label = data_get($t->data, 'name') ?: $t->id;
-            @endphp
-            <div class="card">
-                <div><strong>{{ $label }}</strong></div>
-                <div class="muted">ID: {{ $t->id }}</div>
-                <div class="row">
-                    {{-- These route() calls will include {tenant} param explicitly
-                         since we’re on a central page (not under tenant.defaults) --}}
-                    <a class="btn btn-primary"
-                       href="{{ route('tenant.login', ['tenant' => $t->id]) }}">Log in</a>
-                    <a class="btn"
-                       href="{{ route('tenant.register', ['tenant' => $t->id]) }}">Register</a>
-                    <a class="btn"
-                       href="{{ route('tenant.dashboard', ['tenant' => $t->id]) }}">Dashboard</a>
+                    <h1 class="display-5 fw-semibold brand-title mb-2">
+                        {{ $branding['display_name'] }}
+                    </h1>
+
+                    <div class="text-muted">
+                        Tenant: <code>{{ $branding['slug'] }}</code>
+                    </div>
                 </div>
             </div>
-        @empty
-            <p class="muted">No tenants found. Create one in Tinker:</p>
-            <pre>Tenant::firstOrCreate(['id' => 'alpha']);</pre>
-        @endforelse
+
+            {{-- RIGHT HALF (login; full-width on mobile) --}}
+            <div class="col-12 col-lg-6 d-flex align-items-center justify-content-center py-5">
+                <div class="auth-card px-4">
+                    <div class="text-center mb-4 d-lg-none">
+                        {{-- Optional compact header on mobile --}}
+                        @if(($branding['logo_url'] ?? null))
+                            <img src="{{ $branding['logo_url'] }}" alt="Logo"
+                                 class="mb-3" style="height:48px;width:48px;object-fit:cover;border-radius:.5rem;">
+                        @endif
+                        <h2 class="h4 fw-semibold m-0">{{ $branding['display_name'] }}</h2>
+                    </div>
+
+                    <div class="card shadow-sm">
+                        <div class="card-body p-4 p-md-5">
+                            <h3 class="h5 fw-semibold mb-3 text-center">Sign in</h3>
+
+                            <form method="POST" action="{{ route('login', ['tenant' => $branding['slug']]) }}" novalidate>
+                                @csrf
+
+                                {{-- Email --}}
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email address</label>
+                                    <input
+                                        id="email"
+                                        type="email"
+                                        name="email"
+                                        class="form-control border border-2 @error('email') is-invalid border-danger @else border-secondary @enderror"
+                                        value="{{ old('email') }}"
+                                        required
+                                        autofocus
+                                        autocomplete="username"
+                                    >
+                                    @error('email')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+
+                                {{-- Password --}}
+                                <div class="mb-3">
+                                    <label for="password" class="form-label">Password</label>
+                                    <input
+                                        id="password"
+                                        type="password"
+                                        name="password"
+                                        class="form-control border border-2 @error('password') is-invalid border-danger @else border-secondary @enderror"
+                                        required
+                                        autocomplete="current-password"
+                                    >
+                                    @error('password')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+
+                                {{-- Remember + Forgot --}}
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <div class="form-check">
+                                        <input
+                                            class="form-check-input border border-2 border-secondary"
+                                            type="checkbox"
+                                            name="remember"
+                                            id="remember"
+                                        >
+                                        <label class="form-check-label" for="remember">Remember me</label>
+                                    </div>
+
+                                    @if (Route::has('password.request'))
+                                        <a class="small link-brand"
+                                        href="{{ route('password.request', ['tenant' => $branding['slug']]) }}">
+                                            Forgot password?
+                                        </a>
+                                    @endif
+                                </div>
+
+
+                                <button type="submit" class="btn btn-brand w-100">
+                                    Log in
+                                </button>
+                            </form>
+
+                            {{-- Optional: register link --}}
+                            @if (Route::has('tenant.register'))
+                                <div class="text-center mt-3">
+                                    <span class="small text-muted">New here?</span>
+                                    <a class="small ms-1 link-brand"
+                                       href="{{ route('tenant.register', ['tenant' => $branding['slug']]) }}">
+                                       Create an account
+                                    </a>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-4 small text-muted">
+                        &copy; {{ date('Y') }} {{ $branding['display_name'] }}
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    {{-- Optional: landlord shortcuts if you also have landlord auth --}}
-    <hr style="margin:2rem 0; border-color:#f3f4f6;">
-    <h2>Landlord</h2>
-    <div class="row">
-        <a class="btn btn-primary" href="{{ route('login') }}">Landlord Login</a>
-        <a class="btn" href="{{ route('register') }}">Landlord Register</a>
-        <a class="btn" href="{{ route('tenants.index') }}">Landlord Dashboard</a>
-    </div>
-</div>
+    {{-- Bootstrap JS --}}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

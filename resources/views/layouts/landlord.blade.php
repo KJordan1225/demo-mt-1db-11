@@ -64,7 +64,7 @@
 
                 {{-- Example: Logout (POST) --}}
                 @auth
-                    <form method="POST" action="{{ route('logout', ['tenant' => $branding['slug']]) }}" class="m-0">
+                    <form method="POST" action="{{ route('logout') }}" class="m-0">
                         @csrf
                         <button class="btn btn-sm btn-light" type="submit">Log out</button>
                     </form>
@@ -83,7 +83,7 @@
                         <div class="card-body">
                             <nav class="nav flex-column">
                                 <a class="nav-link {{ request()->routeIs('tenant.dashboard') ? 'active' : '' }}"
-                                   href="{{ route('tenant.dashboard', ['tenant' => $branding['slug']]) }}">
+                                   href="{{ route('dashboard', ['tenant' => $branding['slug']]) }}">
                                     <span class="me-2">🏠</span> Dashboard
                                 </a>
 

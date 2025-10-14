@@ -21,7 +21,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('dashboard');
 
     // Admin (landlord) routes
-    Route::prefix('admin')->name('tenants.')->controller(TenantController::class)->group(function () {
+    Route::prefix('admin')->name('tenants.')
+                            ->controller(TenantController::class)
+                            ->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/create', 'create')->name('create');
         Route::post('/store', 'store')->name('store');
@@ -50,9 +52,7 @@ Route::prefix('{tenant}')
         Route::get('/', fn () => view('tenant.landing', ['tenant' => tenant('id')]))
             ->name('tenant.landing');
 
-
-        Route::middleware(['auth', 'verified'])
-            ->get('/dashboard', [DashboardController::class, 'index'])
+        Route::get('/dashboard', [DashboardController::class, 'index'])
             ->name('tenant.dashboard');
     });
 
