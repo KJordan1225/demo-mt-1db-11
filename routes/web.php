@@ -7,13 +7,17 @@ use App\Http\Controllers\TenantSwitchController;
 use App\Http\Controllers\Tenant\DashboardController;
 use App\Http\Controllers\GuestController;
 use Stancl\Tenancy\Middleware\InitializeTenancyByPath;
+use App\Http\Controllers\PlanController;
+use App\Http\Controllers\SubscriptionController;
+use Laravel\Cashier\Http\Controllers\WebhookController;
+
 
 // ----- Landlord (central) -----
 Route::get('/', fn () => view('welcome'))->name('home');
 
 // Breeze landlord auth (default names: login, register, etc.)
-if (file_exists(__DIR__.'/auth.php')) {
-    require __DIR__.'/auth.php';
+if (file_exists(__DIR__.'/guestAuth.php')) {
+    require __DIR__.'/guestAuth.php';
 }
 
 Route::prefix('guest')->name('guest.')->group(function () {
@@ -22,6 +26,21 @@ Route::prefix('guest')->name('guest.')->group(function () {
 	Route::get('/sign_up', [GuestController::class, 'sign_up'])->name('sign_up');
     Route::get('/contact', [GuestController::class, 'contact'])->name('contact'); // /guest/contact
     Route::post('/contact', [GuestController::class, 'send'])->name('contact.send');
+    // Show plans & start subscribe flow
+    Route::get('/plans', [PlanController::class, 'index'])->name('plans.index');
+    // Show payment form for a specific plan
+    Route::get('/subscribe/{plan}', [SubscriptionController::class, 'showCheckout'])->name('subscribe.show');
+
+    // Create the subscription
+    Route::post('/subscribe/{plan}', [SubscriptionController::class, 'store'])->name('subscribe.store');
+
+    // Manage subscription
+    Route::post('/subscription/cancel', [SubscriptionController::class, 'cancel'])->name('subscription.cancel');
+    Route::post('/subscription/resume', [SubscriptionController::class, 'resume'])->name('subscription.resume');
+
+    // Account page
+    Route::get('/account', [SubscriptionController::class, 'account'])->name('account');
+    
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -40,14 +59,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{tenant}/edit', 'edit')->name('edit');
         Route::any('/update/{tenant}', 'update')->name('update'); // keep 'any' as in your original
         // If you prefer RESTful verbs instead:
-        // Route::match(['put','patch'], '/{tenant}', 'update')->name('update');
+        // Route::match(['put','patch'], '/{tenant}', 'update')->name('update');       
+
     });
 });
 
 
 // ----- Tenant -----
 Route::prefix('{tenant}')
-    ->middleware(['web', 'tenant', 'tenant.defaults'])
+    ->middleware(['tenant', 'web', 'tenant.defaults'])
     ->group(function () {
         // Tenant-auth routes (prefixed names to avoid clashes with landlord)
         if (file_exists(__DIR__.'/tenant_auth.php')) {
@@ -85,6 +105,10 @@ Route::middleware(['web','ctx.tenant'])->group(function () {
         return 'Landlord area';
     })->name('landlord.home');
 });
+
+Route::post('/stripe/webhook', [WebhookController::class, 'handleWebhook'])
+    ->name('cashier.webhook');   
+
 
 
 

@@ -113,6 +113,7 @@
                         <div class="step-line"></div>
                         <h3 class="h5 mb-2">Sign Up & pick your plan</h3>
                         <p class="mb-3">
+                            Make sure you are personally registered to this site (Register page). 
                             Head to the <strong>Sign Up</strong> page, choose the creator plan that fits your goals,
                             and complete checkout. Plans include everything you need to start—hosting, analytics,
                             and payout support—so you can focus on creating.
@@ -163,7 +164,7 @@
                                 <p class="text-muted small mt-2">
                                     Tip: Pick a short, memorable name—avoid spaces and special characters.
                                 </p>
-                                <a href="{{ route('register', null) }}"
+                                <a href="{{ route('guest.register') }}"
                                    class="btn btn-outline-primary">
                                     Go to Registration
                                 </a>
@@ -222,7 +223,7 @@
                     <div class="d-grid gap-2">
                         <a href="#"
                            class="btn btn-primary btn-lg">Choose a Plan</a>
-                        <a href="{{ route('register', null) }}"
+                        <a href="{{ route('guest.register') }}"
                            class="btn btn-outline-primary">Register Your Site</a>
                     </div>
 

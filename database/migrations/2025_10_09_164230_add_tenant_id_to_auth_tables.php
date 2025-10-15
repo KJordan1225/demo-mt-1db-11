@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('tenant_id')
                 ->index()
                 ->nullable()
-                ->default(null)
+                ->default('landlord')
                 ->after('id');
             // optional: enforce tenant-unique email
             $table->unique(['tenant_id', 'email']);
@@ -27,7 +27,7 @@ return new class extends Migration
             $table->string('tenant_id')
                 ->index()
                 ->nullable()
-                ->default(null)
+                ->default('landlord')
                 ->after('email');
             // NOTE: This table already has a PRIMARY KEY on 'email'.
             // If you want per-tenant uniqueness instead, you would need to
@@ -42,7 +42,7 @@ return new class extends Migration
             $table->string('tenant_id')
                 ->index()
                 ->nullable()
-                ->default(null)
+                ->default('landlord')
                 ->after('id');
             // You can also make (tenant_id, user_id) a composite index if useful for lookups:
             $table->index(['tenant_id', 'user_id']);

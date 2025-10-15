@@ -87,6 +87,13 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link text-white{{ request()->routeIs('guestr.about') ? 'active' : '' }}"
+                            href="{{ route('guest.plans.index') }}"
+                            style="font-size:20px;">
+                            Plans too
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link text-white{{ request()->routeIs('guest.contact') ? 'active' : '' }}"
                             href="{{ route('guest.contact') }}"
                             style="font-size:20px;">

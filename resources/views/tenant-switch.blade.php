@@ -39,6 +39,10 @@
             color: var(--brand-primary) !important;
             text-decoration: none;
         }
+        .link-brand2 {
+            color: #ffffff !important;
+            text-decoration: none;
+        }
         .link-brand:hover {
             text-decoration: underline;
         }
@@ -58,11 +62,14 @@
                     @endif
 
                     <h1 class="display-5 fw-semibold brand-title mb-2">
-                        {{ $branding['display_name'] }}
+                        StarCity Starz
                     </h1>
 
                     <div class="text-muted">
-                        Tenant: <code>{{ $branding['slug'] }}</code>
+                        <a class="small ms-1 link-brand2"
+                            href="{{ route('guest.register') }}">
+                            Create an account
+                        </a>                        
                     </div>
                 </div>
             </div>
@@ -83,7 +90,7 @@
                         <div class="card-body p-4 p-md-5">
                             <h3 class="h5 fw-semibold mb-3 text-center">Sign in</h3>
 
-                            <form method="POST" action="{{ route('login', ['tenant' => $branding['slug']]) }}" novalidate>
+                            <form method="POST" action="{{ route('guest.login') }}" novalidate>
                                 @csrf
 
                                 {{-- Email --}}
@@ -153,7 +160,7 @@
                                 <div class="text-center mt-3">
                                     <span class="small text-muted">New here?</span>
                                     <a class="small ms-1 link-brand"
-                                       href="{{ route('tenant.register', ['tenant' => $branding['slug']]) }}">
+                                       href="{{ route('guest.register') }}">
                                        Create an account
                                     </a>
                                 </div>
