@@ -41,37 +41,77 @@
     <nav class="navbar navbar-expand-lg topbar navbar-dark">
         <div class="container-fluid">
             {{-- Left: Hamburger toggles the offcanvas sidebar on mobile --}}
-            <button class="btn btn-outline-light d-lg-none me-2" type="button"
-                    data-bs-toggle="offcanvas" data-bs-target="#tenantSidebar"
-                    aria-controls="tenantSidebar" aria-label="Toggle sidebar">
+            <button class="btn btn-outline-light d-lg-none me-2"
+                    type="button"
+                    data-bs-toggle="offcanvas"
+                    data-bs-target="#tenantSidebar"
+                    aria-controls="tenantSidebar"
+                    aria-label="Toggle sidebar">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
             {{-- Brand --}}
             <a class="navbar-brand d-flex align-items-center gap-2"
-               href="{{ route('tenant.dashboard', ['tenant' => $branding['slug']]) }}">
-                @if($branding['logo_url'])
+            href="{{ route('tenant.dashboard', ['tenant' => $branding['slug']]) }}">
+                @if(!empty($branding['logo_url']))
                     <img src="{{ $branding['logo_url'] }}" class="tenant-logo" alt="Logo">
                 @endif
-                <span class="fw-semibold">{{ $branding['display_name'] }}</span>
+                <span class="fw-semibold">{{ $branding['display_name'] ?? 'My Site' }}</span>
             </a>
 
-            {{-- Right-side top nav (add links or auth menu) --}}
-            <div class="ms-auto d-flex align-items-center gap-3">
-                <span class="text-white-50 small d-none d-sm-inline">
-                    Tenant: <strong>{{ $branding['slug'] }}</strong>
-                </span>
+            {{-- Mobile toggler for the horizontal nav links --}}
+            <button class="navbar-toggler ms-2" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#topnavLinks"
+                    aria-controls="topnavLinks" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
-                {{-- Example: Logout (POST) --}}
-                @auth
-                    <form method="POST" action="{{ route('logout') }}" class="m-0">
-                        @csrf
-                        <button class="btn btn-sm btn-light" type="submit">Log out</button>
-                    </form>
-                @endauth
+            {{-- Center: Horizontal links --}}
+            <div class="collapse navbar-collapse" id="topnavLinks">
+                <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a
+                            class="nav-link text-white {{ request()->routeIs('guest.home') ? 'active' : '' }}"
+                            href="{{ route('guest.home') }}"
+                            style="font-size:20px;"
+                        >
+                            Home
+                        </a>
+
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white{{ request()->routeIs('guestr.about') ? 'active' : '' }}"
+                            href="{{ route('guest.about') }}"
+                            style="font-size:20px;">
+                            Plans
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white{{ request()->routeIs('guest.contact') ? 'active' : '' }}"
+                            href="{{ route('guest.contact') }}"
+                            style="font-size:20px;">
+                            Contact
+                        </a>
+                    </li>
+                </ul>
+
+                {{-- Right-side top nav (tenant badge + auth) --}}
+                <div class="ms-lg-auto d-flex align-items-center gap-3">
+                    <span class="text-white-50 small d-none d-sm-inline">
+                        Tenant: <strong>{{ $branding['slug'] }}</strong>
+                    </span>
+
+                    @auth
+                        <form method="POST" action="{{ route('logout') }}" class="m-0">
+                            @csrf
+                            <button class="btn btn-sm btn-light" type="submit">Log out</button>
+                        </form>
+                    @endauth
+                </div>
             </div>
         </div>
     </nav>
+
 
     {{-- MAIN WRAPPER: sidebar (left) + content (right) --}}
     <div class="container-fluid py-3 flex-grow-1">
@@ -85,6 +125,29 @@
                                 <a class="nav-link {{ request()->routeIs('tenant.dashboard') ? 'active' : '' }}"
                                    href="{{ route('dashboard', ['tenant' => $branding['slug']]) }}">
                                     <span class="me-2">🏠</span> Dashboard
+                                </a>
+
+                                {{-- Extra sidebar links from children --}}
+                                @yield('sidebar')
+                            </nav>
+                        </div>
+                    </div>
+
+                    <div class="card shadow-sm mt-2">
+                        <div class="card-header">
+                            <h6 class="mb-0">Manage Tenants</h6>
+                        </div>
+
+                        <div class="card-body">
+                            <nav class="nav flex-column">
+                                <a class="nav-link d-flex align-items-center {{ request()->routeIs('tenants.index') ? 'active' : '' }}"
+                                href="{{ route('tenants.index') }}">
+                                    <span class="me-2">📋</span> List Tenants
+                                </a>
+
+                                <a class="nav-link d-flex align-items-center {{ request()->routeIs('tenants.create') ? 'active' : '' }}"
+                                href="{{ route('tenants.create') }}">
+                                    <span class="me-2">➕</span> Add Tenant
                                 </a>
 
                                 {{-- Extra sidebar links from children --}}

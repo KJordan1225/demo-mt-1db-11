@@ -5,6 +5,7 @@ use App\Http\Controllers\TenantController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TenantSwitchController;
 use App\Http\Controllers\Tenant\DashboardController;
+use App\Http\Controllers\GuestController;
 use Stancl\Tenancy\Middleware\InitializeTenancyByPath;
 
 // ----- Landlord (central) -----
@@ -14,6 +15,14 @@ Route::get('/', fn () => view('welcome'))->name('home');
 if (file_exists(__DIR__.'/auth.php')) {
     require __DIR__.'/auth.php';
 }
+
+Route::prefix('guest')->name('guest.')->group(function () {
+    Route::get('/', [GuestController::class, 'home'])->name('home');          // /guest
+    Route::get('/about', [GuestController::class, 'about'])->name('about');   // /guest/about
+	Route::get('/sign_up', [GuestController::class, 'sign_up'])->name('sign_up');
+    Route::get('/contact', [GuestController::class, 'contact'])->name('contact'); // /guest/contact
+    Route::post('/contact', [GuestController::class, 'send'])->name('contact.send');
+});
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard
