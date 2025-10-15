@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Laravel\Cashier\Billable;
+use Laravel\Cashier\Subscription;
 
 
 class User extends Authenticatable
@@ -93,4 +94,21 @@ class User extends Authenticatable
 
         return $this->permissions($tenantId)->where('name', $permissionName)->exists();
     }
+
+    public function hasActiveSubscription(): bool
+    {
+        return (bool) $this->subscription('default')?->valid();
+    }
+
+    public function hasActivePrice(string $priceId): bool
+    {
+        $sub = $this->subscription('default');
+        if (! $sub || ! $sub->valid()) return false;
+
+        // Cashier links items in `subscription_items` table
+        return $sub->items()->where('stripe_price', $priceId)->exists();
+    }
+
+
+    
 }

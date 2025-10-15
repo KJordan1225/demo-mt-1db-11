@@ -42,15 +42,41 @@ class SubscriptionController extends Controller
             'payment_method' => ['required', 'string'],
         ]);
 
-        $user = $request->user();
-
-        $user->createOrGetStripeCustomer();   
+        $user = $request->user();         
+        $priceId   = $plans[$plan]['price_id']; 
+        
+        $user->createOrGetStripeCustomer();
 
         // Ensure we keep tenant isolation on single DB
         if (blank($user->tenant_id)) {
             $user->tenant_id = tenant('id');
             $user->save();
         }
+
+        if ($user->hasActivePrice($priceId)) {
+            return redirect()
+                ->route('guest.account')
+                ->with('status', 'You are already subscribed to this plan.');
+        }
+
+        // If user has *a* subscription, handle plan changes via swap (no duplicate)
+        if ($user->hasActiveSubscription()) {
+            try {
+                $user->subscription('default')->swap($priceId);
+                // Optional: ensure metadata carries tenant/plan
+                $user->subscription('default')->update([
+                    'tenant_id' => 'landlord', // single-DB isolation
+                ]);
+
+                return redirect()
+                    ->route('guest.account')
+                    ->with('status', 'Your plan has been updated.');
+            } catch (\Throwable $e) {
+                return back()->with('error', $e->getMessage());
+            }
+        }
+
+
 
         // Attach PM if no default
         if (! $user->hasDefaultPaymentMethod()) {
@@ -64,7 +90,7 @@ class SubscriptionController extends Controller
                     'metadata' => [
                         'plan_key'  => $plan,
                         'user_id'   => $user->id,
-                        'tenant_id' => tenant('id'), // helpful for ops/debug
+                        'tenant_id' => 'landlord', // helpful for ops/debug
                     ],
                 ]);
 
@@ -80,15 +106,24 @@ class SubscriptionController extends Controller
             return redirect()
                 ->route('guest.account')
                 ->with('status', 'Subscription started!');
-        } catch (\Laravel\Cashier\Exceptions\IncompletePayment $e) {
+            } catch (\Laravel\Cashier\Exceptions\IncompletePayment $e) {
+                return redirect()->route(
+                    'cashier.webhook',
+                    [$e->payment->id, 'redirect' => route('guest.account')]
+                );
+            } catch (\Throwable $e) {
+                return back()->with('error', $e->getMessage());
+            }catch (\Laravel\Cashier\Exceptions\IncompletePayment $e) {
             return redirect()->route(
-                'cashier.payment',
+                'cashier.webhook',
                 [$e->payment->id, 'redirect' => route('guest.account')]
             );
         } catch (\Throwable $e) {
             return back()->with('error', $e->getMessage());
         }
     }
+
+        
 
     public function account(Request $request)
     {
