@@ -223,8 +223,8 @@
                     <div class="d-grid gap-2">
                         <a href="#"
                            class="btn btn-primary btn-lg">Choose a Plan</a>
-                        <a href="{{ route('guest.register') }}"
-                           class="btn btn-outline-primary">Register Your Site</a>
+                        <a href="{{ route('guest.microsite.configure') }}"
+                           class="btn btn-outline-primary">Configure Your Site</a>
                     </div>
 
                     <hr class="my-4">

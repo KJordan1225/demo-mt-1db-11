@@ -91,7 +91,7 @@
                         <div class="card-body p-4 p-md-5">
                             <h3 class="h5 fw-semibold mb-3 text-center">Sign in</h3>
 
-                            <form method="POST" action="{{ route('login', ['tenant' => $branding['slug']]) }}" novalidate>
+                            <form method="POST" action="#" novalidate>
                                 @csrf
 
                                 {{-- Email --}}
@@ -124,7 +124,7 @@
                                     </div>
                                     @if (Route::has('password.request'))
                                         <a class="small link-brand"
-                                           href="{{ route('password.request', ['tenant' => $branding['slug']]) }}">
+                                           href="#">
                                             Forgot password?
                                         </a>
                                     @endif

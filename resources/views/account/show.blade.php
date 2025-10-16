@@ -27,6 +27,8 @@
                             <button class="btn btn-success">Resume</button>
                         </form>
                     @endif
+
+                    <a href="{{ route('guest.microsite.configure') }}" class="btn btn-success" role="button">Configure your micro-site</a>
                 </div>
             </div>
         </div>

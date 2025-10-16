@@ -10,6 +10,7 @@ use Stancl\Tenancy\Middleware\InitializeTenancyByPath;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\SubscriptionController;
 use Laravel\Cashier\Http\Controllers\WebhookController;
+use App\Http\Controllers\ConfigureMicrositeController;
 
 
 // ----- Landlord (central) -----
@@ -40,8 +41,11 @@ Route::prefix('guest')->name('guest.')->group(function () {
 
     // Account page
     Route::get('/account', [SubscriptionController::class, 'account'])->name('account');
-    
+
+    Route::get('/microsite/configure', [ConfigureMicrositeController::class, 'index'])->name('microsite.configure');
+    Route::post('/microsite/configure', [ConfigureMicrositeController::class, 'store'])->name('microsite.configure.store');
 });
+
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard
