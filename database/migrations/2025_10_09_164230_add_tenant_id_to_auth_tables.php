@@ -4,76 +4,141 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        // users
+        /**
+         * USERS: add tenant_id and enforce (tenant_id, email) uniqueness.
+         * If a previous unique index existed on `email`, drop it first.
+         */
         Schema::table('users', function (Blueprint $table) {
-            $table->string('tenant_id')
-                ->index()
-                ->nullable()
-                ->default('landlord')
-                ->after('id');
-            // optional: enforce tenant-unique email
-            $table->unique(['tenant_id', 'email']);
+            // 1) Add tenant_id (nullable for landlord/global) if missing
+            if (! Schema::hasColumn('users', 'tenant_id')) {
+                $table->string('tenant_id')
+                    ->nullable()
+                    ->default(null)
+                    ->index()
+                    ->after('id');
+            }
+
+            // 2) Drop legacy unique on email if it exists (index name is usually users_email_unique)
+            //    If you never had a unique on email, this will be a no-op on most drivers.
+            try {
+                $table->dropUnique('users_email_unique');
+            } catch (\Throwable $e) {
+                // ignore if it didn't exist
+            }
+
+            // 3) Add composite unique on (tenant_id, email)
+            //    Note: In MySQL, multiple NULLs in a UNIQUE composite are allowed per row,
+            //    but combined with email it still enforces uniqueness per tenant effectively.
+            $table->unique(['tenant_id', 'email'], 'users_tenant_email_unique');
         });
 
-        // password_reset_tokens
+        /**
+         * PASSWORD RESET TOKENS:
+         * Add tenant_id and switch primary key from (email) to (tenant_id, email)
+         */
         Schema::table('password_reset_tokens', function (Blueprint $table) {
-            $table->string('tenant_id')
-                ->index()
-                ->nullable()
-                ->default('landlord')
-                ->after('email');
-            // NOTE: This table already has a PRIMARY KEY on 'email'.
-            // If you want per-tenant uniqueness instead, you would need to
-            // drop the existing primary and create a composite primary:
-            //
-            $table->dropPrimary('password_reset_tokens_email_primary');
-            $table->primary(['tenant_id', 'email']);
+            if (! Schema::hasColumn('password_reset_tokens', 'tenant_id')) {
+                $table->string('tenant_id')
+                    ->nullable()
+                    ->default(null)
+                    ->index()
+                    ->after('email');
+            }
+
+            // Drop the existing PK on email (Laravel default name)
+            try {
+                $table->dropPrimary('password_reset_tokens_email_primary');
+            } catch (\Throwable $e) {
+                // ignore if it's already changed
+            }
+
+            // Create composite primary key
+            $table->primary(['tenant_id', 'email'], 'password_reset_tokens_tenant_email_primary');
         });
 
-        // sessions
+        /**
+         * SESSIONS:
+         * Add tenant_id and helpful composite index for queries
+         */
         Schema::table('sessions', function (Blueprint $table) {
-            $table->string('tenant_id')
-                ->index()
-                ->nullable()
-                ->default('landlord')
-                ->after('id');
-            // You can also make (tenant_id, user_id) a composite index if useful for lookups:
-            $table->index(['tenant_id', 'user_id']);
+            if (! Schema::hasColumn('sessions', 'tenant_id')) {
+                $table->string('tenant_id')
+                    ->nullable()
+                    ->default(null)
+                    ->index()
+                    ->after('id');
+            }
+
+            // Optional composite index for faster lookups by tenant+user
+            $table->index(['tenant_id', 'user_id'], 'sessions_tenant_user_index');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        // users
+        /**
+         * USERS: revert to legacy unique(email) and drop composite unique + tenant_id column (optional)
+         */
         Schema::table('users', function (Blueprint $table) {
-            // if you added the composite unique above, drop it first:
-            $table->dropUnique('users_tenant_id_email_unique');
-            $table->dropColumn('tenant_id');
+            // Drop composite unique if present
+            try {
+                $table->dropUnique('users_tenant_email_unique');
+            } catch (\Throwable $e) {
+                // ignore if not present
+            }
+
+            // Restore unique on email (legacy behavior)
+            // If you don't want to restore this, you can remove this line.
+            $table->unique('email', 'users_email_unique');
+
+            // Optionally drop tenant_id (comment out if you want to keep it)
+            // Be careful: if other code depends on tenant_id, don't drop it.
+            // try {
+            //     $table->dropColumn('tenant_id');
+            // } catch (\Throwable $e) { /* ignore */ }
         });
 
-        // password_reset_tokens
+        /**
+         * PASSWORD RESET TOKENS: revert PK to (email), drop composite PK
+         */
         Schema::table('password_reset_tokens', function (Blueprint $table) {
-            // If you changed the primary to composite, revert it before dropping the column:
-            $table->dropPrimary(['tenant_id', 'email']);
-            $table->primary('email');
-            $table->dropColumn('tenant_id');
+            // Drop composite PK if present
+            try {
+                $table->dropPrimary('password_reset_tokens_tenant_email_primary');
+            } catch (\Throwable $e) {
+                // ignore
+            }
+
+            // Restore original PK on email
+            $table->primary('email', 'password_reset_tokens_email_primary');
+
+            // Optionally drop tenant_id
+            // try {
+            //     $table->dropColumn('tenant_id');
+            // } catch (\Throwable $e) { /* ignore */ }
         });
 
-        // sessions
+        /**
+         * SESSIONS: drop helper index and (optionally) tenant_id
+         */
         Schema::table('sessions', function (Blueprint $table) {
-            // if you created extra indices above, drop them first:
-            $table->dropIndex(['tenant_id', 'user_id']);
-            $table->dropColumn('tenant_id');
+            try {
+                $table->dropIndex('sessions_tenant_user_index');
+            } catch (\Throwable $e) {
+                // ignore
+            }
+
+            // Optionally drop tenant_id
+            // try {
+            //     $table->dropColumn('tenant_id');
+            // } catch (\Throwable $e) { /* ignore */ }
         });
     }
 };
+
+

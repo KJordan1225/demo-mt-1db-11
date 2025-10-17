@@ -19,7 +19,7 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(): View
     {
-        return view('auth.login');
+        return view('tenant-switch');
     }
 
     /**
@@ -31,7 +31,7 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('tenants.index', absolute: false));
+        return redirect()->intended(route('guest.home', absolute: false));
     }
 
     /**
@@ -39,7 +39,7 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
-        Auth::guard('web')->logout();
+        Auth::guard('web')->logout();        
 
         $request->session()->invalidate();
 

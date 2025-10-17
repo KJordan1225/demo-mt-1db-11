@@ -108,12 +108,12 @@
                         Tenant: <strong>{{ $branding['slug'] }}</strong>
                     </span>
 
-                    @auth
+                    
                         <form method="POST" action="{{ route('logout') }}" class="m-0">
                             @csrf
                             <button class="btn btn-sm btn-light" type="submit">Log out</button>
                         </form>
-                    @endauth
+                    
                 </div>
             </div>
         </div>

@@ -67,7 +67,7 @@
 
                     <div class="text-muted">
                         <a class="small ms-1 link-brand2"
-                            href="{{ route('guest.register') }}">
+                            href="{{ route('register.landlord') }}">
                             Create an account
                         </a>                        
                     </div>
@@ -160,7 +160,7 @@
                                 <div class="text-center mt-3">
                                     <span class="small text-muted">New here?</span>
                                     <a class="small ms-1 link-brand"
-                                       href="{{ route('guest.register') }}">
+                                       href="{{ route('register.landlord') }}">
                                        Create an account
                                     </a>
                                 </div>

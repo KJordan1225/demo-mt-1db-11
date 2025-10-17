@@ -11,15 +11,34 @@ use App\Http\Controllers\PlanController;
 use App\Http\Controllers\SubscriptionController;
 use Laravel\Cashier\Http\Controllers\WebhookController;
 use App\Http\Controllers\ConfigureMicrositeController;
+use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
 
 
 // ----- Landlord (central) -----
-Route::get('/', fn () => view('welcome'))->name('home');
+// Route::get('/', fn () => view('welcome'))->name('home');
 
 // Breeze landlord auth (default names: login, register, etc.)
 if (file_exists(__DIR__.'/guestAuth.php')) {
     require __DIR__.'/guestAuth.php';
 }
+
+Route::get('login', [AuthenticatedSessionController::class, 'create'])
+    ->name('login');
+
+Route::post('login', [AuthenticatedSessionController::class, 'store']);
+
+// Landlord registration route
+Route::get('/register-landlord', [RegisterController::class, 'showLandlordForm'])
+    ->name('register.landlord');
+Route::post('/register-landlord', [RegisterController::class, 'registerLandlord'])
+    ->name('register.landlord.store');
+// Tenant registration route (pass tenant slug)
+Route::get('/register/{tenantSlug}', [RegisterController::class, 'showTenantForm'])
+    ->name('register.tenant');
+Route::post('/register/{tenantSlug}', [RegisterController::class, 'registerTenant'])
+    ->name('register.tenant.store');
+
 
 Route::prefix('guest')->name('guest.')->group(function () {
     Route::get('/', [GuestController::class, 'home'])->name('home');          // /guest
