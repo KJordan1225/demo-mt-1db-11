@@ -91,7 +91,7 @@
                         <div class="card-body p-4 p-md-5">
                             <h3 class="h5 fw-semibold mb-3 text-center">Sign in</h3>
 
-                            <form method="POST" action="#" novalidate>
+                            <form method="POST" action="{{ route('login', ['tenant' => $branding['slug']]) }}"  novalidate>
                                 @csrf
 
                                 {{-- Email --}}

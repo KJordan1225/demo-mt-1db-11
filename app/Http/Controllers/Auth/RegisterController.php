@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Tenant;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
@@ -52,7 +53,8 @@ class RegisterController extends Controller
             $user->assignRole('admin','landlord', null);
         };
 
-        event(new Registered($user));
+        // event(new Registered($user));
+        Auth::login($user);
         
         return redirect()->route('guest.home'); // Or wherever you want to redirect
     }

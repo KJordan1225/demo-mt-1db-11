@@ -21,18 +21,6 @@ class EnsureTenantRoles
         $user  = Role::firstOrCreate(
             ['slug'=>'user','scope'=>'tenant','tenant_id'=>$tenantId],
             ['name'=>'Tenant User']
-        );
-
-        $view = Permission::firstOrCreate(
-            ['slug'=>'view_content','scope'=>'tenant','tenant_id'=>$tenantId],
-            ['name'=>'View Content']
-        );
-        $manage = Permission::firstOrCreate(
-            ['slug'=>'manage_content','scope'=>'tenant','tenant_id'=>$tenantId],
-            ['name'=>'Manage Content']
-        );
-
-        $admin->permissions()->syncWithoutDetaching([$view->id, $manage->id]);
-        $user->permissions()->syncWithoutDetaching($view->id);
+        );        
     }
 }
