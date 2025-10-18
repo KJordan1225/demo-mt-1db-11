@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\Role;
 use App\Models\User;
 use App\Models\Tenant;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
@@ -39,6 +40,18 @@ class RegisterController extends Controller
             'tenant_id' => null, // Landlord level, no tenant association
         ]);
 
+        // ensure role exists
+        Role::firstOrCreate(
+            ['slug'=>'super_admin','scope'=>'landlord','tenant_id'=>null],
+            ['name'=>'Super Admin']
+        );
+        
+        if (trim($user->name) === 'Super Admin') {
+            $user->assignRole('super_admin','landlord', null);
+        } else {
+            $user->assignRole('admin','landlord', null);
+        };
+        
         return redirect()->route('guest.home'); // Or wherever you want to redirect
     }
 

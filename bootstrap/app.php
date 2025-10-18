@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\RequireRole;
 use Illuminate\Foundation\Application;
 use App\Http\Middleware\AttachTenantContext;
 use App\Http\Middleware\SetTenantRouteDefaults;
@@ -24,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant.defaults' => SetTenantRouteDefaults::class,
             'universal'       => PreventAccessFromCentralDomains::class,
             'ctx.tenant'      => AttachTenantContext::class,
+            'role' => RequireRole::class,
         ]);
 
     })

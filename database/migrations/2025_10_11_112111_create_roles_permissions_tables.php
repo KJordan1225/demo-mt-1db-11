@@ -8,48 +8,30 @@ return new class extends Migration {
     public function up(): void
     {
         // Roles: tenant_id NULL => landlord; non-NULL => tenant-scoped
-        Schema::create('roles', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');                  // super-admin, admin, user, ...
-            $table->string('tenant_id')
-            ->nullable()
-            ->default(null); // NULL landlord; value = tenant key
-            $table->timestamps();
-            $table->unique(['name', 'tenant_id']);
+        Schema::create('roles', function (Blueprint $t) {
+            $t->id();
+            $t->string('name');                 // display name, e.g. 'Super Admin'
+            $t->string('slug');                 // machine name, e.g. 'super_admin'
+            $t->enum('scope', ['landlord','tenant'])->index();
+            $t->string('tenant_id')->nullable()->index();
+            $t->timestamps();
+            $t->unique(['slug','scope','tenant_id']); // prevents dupes per scope+tenant
         });
 
-        Schema::create('permissions', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('tenant_id')
-            ->nullable()
-            ->default(null); // NULL landlord; value = tenant key
-            $table->timestamps();
-            $table->unique(['name', 'tenant_id']);
+        Schema::create('role_user', function (Blueprint $t) {
+            $t->id();
+            $t->foreignId('role_id')->constrained()->cascadeOnDelete();
+            $t->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $t->string('tenant_id')->nullable()->index(); // mirror context
+            $t->timestamps();
+            $t->unique(['role_id','user_id','tenant_id']);
         });
 
-        Schema::create('permission_role', function (Blueprint $table) {
-            $table->unsignedBigInteger('role_id');
-            $table->unsignedBigInteger('permission_id');
-            $table->primary(['role_id', 'permission_id']);
-            $table->foreign('role_id')->references('id')->on('roles')->cascadeOnDelete();
-            $table->foreign('permission_id')->references('id')->on('permissions')->cascadeOnDelete();
-        });
-
-        Schema::create('role_user', function (Blueprint $table) {
-            $table->unsignedBigInteger('role_id');
-            $table->unsignedBigInteger('user_id');
-            $table->primary(['role_id', 'user_id']);
-            $table->foreign('role_id')->references('id')->on('roles')->cascadeOnDelete();
-            $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
-        });
     }
 
     public function down(): void
     {
         Schema::dropIfExists('role_user');
-        Schema::dropIfExists('permission_role');
-        Schema::dropIfExists('permissions');
         Schema::dropIfExists('roles');
     }
 };

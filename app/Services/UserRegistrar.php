@@ -6,28 +6,31 @@ use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use App\Models\Role;
+
 
 class UserRegistrar
 {
-    /**
-     * Create a user, fire Registered event, and (optionally) mark email for verification.
-     */
-    public function register(array $data, ?string $tenantId = null): User
+    public function registerLandlord(array $data): User
     {
         $user = User::create([
             'name'      => $data['name'],
             'email'     => $data['email'],
-            'password'  => Hash::make($data['password'] ?? Str::random(16)),
-            // include tenant_id if you’re doing single-DB multi-tenancy
-            'tenant_id' => $tenantId,
+            'password'  => Hash::make($data['password']),
+            'tenant_id' => null, // landlord/global
         ]);
 
-        // Fire standard registration event (listeners may send verification email, etc.)
+        // ensure role exists
+        Role::firstOrCreate(
+            ['slug'=>'super_admin','scope'=>'landlord','tenant_id'=>null],
+            ['name'=>'Super Admin']
+        );
+        
+        if (trim($user->name) === 'Super Admin') {
+            $user->assignRole('super_admin','landlord', null);
+        }
+
         event(new Registered($user));
-
-        // If you use email verification and want to send it right now:
-        // $user->sendEmailVerificationNotification();
-
         return $user;
     }
 }
