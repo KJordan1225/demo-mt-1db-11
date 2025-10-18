@@ -25,12 +25,13 @@ class UserRegistrar
             ['slug'=>'super_admin','scope'=>'landlord','tenant_id'=>null],
             ['name'=>'Super Admin']
         );
-        
+
         if (trim($user->name) === 'Super Admin') {
             $user->assignRole('super_admin','landlord', null);
         }
 
         event(new Registered($user));
+        
         return $user;
     }
 }

@@ -51,6 +51,8 @@ class RegisterController extends Controller
         } else {
             $user->assignRole('admin','landlord', null);
         };
+
+        event(new Registered($user));
         
         return redirect()->route('guest.home'); // Or wherever you want to redirect
     }
