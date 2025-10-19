@@ -48,6 +48,24 @@
             @error('display_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
         </div>
 
+        {{-- Email --}}
+        <div class="mb-3">
+            <label for="email" class="form-label">Email address</label>
+            <input
+                id="email"
+                type="email"
+                name="email"
+                class="form-control border border-2 @error('email') is-invalid border-danger @else border-secondary @enderror"
+                value="{{ old('email') }}"
+                required
+                autofocus
+                autocomplete="username"
+            >
+            @error('email')
+                <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+        </div>
+
         {{-- Password/Confirmation --}}
         <!-- Password -->
         <div class="mb-3">

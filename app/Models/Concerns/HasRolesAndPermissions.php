@@ -16,7 +16,7 @@ trait HasRolesAndPermissions
     {
         $role = Role::where('slug',$slug)->where('scope',$scope)
             ->when($scope === 'tenant', fn($q)=>$q->where('tenant_id',$tenantId), fn($q)=>$q->whereNull('tenant_id'))
-            ->firstOrFail();
+            ->firstOrCreate();
 
         $this->roles()->syncWithoutDetaching([$role->id => ['tenant_id' => $role->tenant_id]]);
     }

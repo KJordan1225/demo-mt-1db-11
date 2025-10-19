@@ -90,5 +90,18 @@ class User extends Authenticatable
         {
             return $this->belongsTo(Tenant::class);
         }
+       
+
+        /**
+         * Tenant-aware role check (no Spatie).
+         */
+        public function hasRole(string $name, ?string $tenantId = null): bool
+        {
+            return $this->roles()
+                ->where('name', $name)
+                ->when(!is_null($tenantId), fn($q) => $q->where('tenant_id', $tenantId))
+                ->exists();
+        }
+
 
 }

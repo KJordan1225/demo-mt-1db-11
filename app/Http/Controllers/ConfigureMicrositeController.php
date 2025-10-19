@@ -20,18 +20,22 @@ class ConfigureMicrositeController extends Controller
     public function store(Request $request)	
 	{
 		$data = $request->validate([
-			'id'             => ['required', 'string', 'max:191', 'unique:tenants,id'],
-			'display_name'   => ['required', 'string', 'max:255'],
-			'logo_url'       => ['nullable', 'url', 'max:2048'],
-			'primary_color'  => ['required', 'string', 'max:7'],
-			'accent_color'   => ['required', 'string', 'max:7'],
-			'bg_color'       => ['required', 'string', 'max:7'],
-			'text_color'     => ['required', 'string', 'max:7'],
+			'id' => ['required', 'string', 'max:191', 'unique:tenants,id'],
+			'display_name' => ['required', 'string', 'max:255'],
+			'logo_url' => ['nullable', 'url', 'max:2048'],
+			'primary_color' => ['required', 'string', 'max:7'],
+			'accent_color' => ['required', 'string', 'max:7'],
+			'bg_color' => ['required', 'string', 'max:7'],
+			'text_color' => ['required', 'string', 'max:7'],
+			
+			// Email validation
+			'email' => ['required', 'email', 'max:255', 'unique:users,email'], // assuming users table, adjust if needed
 			
 			// Password validation
 			'password' => ['required', 'string', 'min:8', 'confirmed'], // 'confirmed' will check for matching passwords
 			'password_confirmation' => ['required', 'string', 'min:8'],
 		]);
+
 
 		$tenant =Tenant::create([
 			'id'   => $data['id'],
@@ -44,11 +48,18 @@ class ConfigureMicrositeController extends Controller
 			'text_color'    => $data['text_color'],
 		]);
 
+		// Per-tenant roles & permissions
+		Tenant::query()->each(function (Tenant $t) {
+			$tid = method_exists($t, 'getTenantKey') ? $t->getTenantKey() : $t->id;
+
+			$tAdmin = Role::firstOrCreate(['name' => 'admin', 'slug' => 'admin', 'scope' => 'tenant', 'tenant_id' => $tid]);
+			$tUser  = Role::firstOrCreate(['name' => 'user',  'slug' => 'user', 'scope' => 'tenant', 'tenant_id' => $tid]);
+		});
 	
-		$email = auth()->user()->email;    
+		$email = $data['email'];   
 
 		// Ensure that email is unique per tenant
-		if (!User::emailIsUniqueForTenant($request->email, $tenant->id)) {
+		if (!User::emailIsUniqueForTenant($data['email'], $tenant->id)) {
 			return back()->withErrors(['email' => 'This email is already registered for this tenant.']);
 		}
 
@@ -59,6 +70,8 @@ class ConfigureMicrositeController extends Controller
 			'password' => Hash::make($data['password']),
 			'tenant_id' => $tenant->id, // Tenant ID is set
 		]);
+
+		$user->assignRole('admin','tenant', $tenant->id);
 
 		// (Optional) auto-assign the creating user as tenant admin:
 		//if (auth()->check()) {
