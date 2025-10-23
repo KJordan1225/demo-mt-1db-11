@@ -3,7 +3,7 @@
 namespace App\Support\Media;
 
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
-use Spatie\MediaLibrary\MediaCollections\PathGenerator\PathGenerator;
+use Spatie\MediaLibrary\Support\PathGenerator\PathGenerator;
 
 class TenantPathGenerator implements PathGenerator
 {

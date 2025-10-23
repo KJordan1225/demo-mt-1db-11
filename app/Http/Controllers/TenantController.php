@@ -34,6 +34,8 @@ class TenantController extends Controller
             'text_color'    => ['required','string','max:7'],
         ]);
 
+        $data['slug'] = $data['id']; // set slug == id for simplicity 
+        
         $tenant =Tenant::create([
             'id'   => $data['id'],
             'data' => [],
@@ -43,6 +45,7 @@ class TenantController extends Controller
             'accent_color'  => $data['accent_color'],
             'bg_color'      => $data['bg_color'],
             'text_color'    => $data['text_color'],
+            'slug'          => $data['id'], // set slug == id for simplicity
         ]);
 
         // 2) Seed per-tenant roles & permissions

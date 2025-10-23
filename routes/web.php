@@ -1,17 +1,18 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PlanController;
+use App\Http\Controllers\GuestController;
 use App\Http\Controllers\TenantController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\TenantSwitchController;
-use App\Http\Controllers\Tenant\DashboardController;
-use App\Http\Controllers\GuestController;
-use Stancl\Tenancy\Middleware\InitializeTenancyByPath;
-use App\Http\Controllers\PlanController;
 use App\Http\Controllers\SubscriptionController;
-use Laravel\Cashier\Http\Controllers\WebhookController;
-use App\Http\Controllers\ConfigureMicrositeController;
+use App\Http\Controllers\TenantSwitchController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\TenantAdminPostController;
+use App\Http\Controllers\Tenant\DashboardController;
+use App\Http\Controllers\ConfigureMicrositeController;
+use Stancl\Tenancy\Middleware\InitializeTenancyByPath;
+use Laravel\Cashier\Http\Controllers\WebhookController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 
 
@@ -106,6 +107,42 @@ Route::prefix('{tenant}')
 
         Route::get('/dashboard', [DashboardController::class, 'index'])
             ->name('tenant.dashboard');
+
+        // Route::get('/home', fn () => view('guest.tenant.home', ['tenant' => tenant('id')]))
+        //     ->name('guest.home');
+        Route::get('/home', function (Request $request) {
+            $tenantId = function_exists('tenant') ? tenant('id') : null;
+            $user     = auth()->user();
+
+            // Not logged in → guest landing
+            if (!$user) {
+                return view('guest.tenant.home', ['tenant' => $tenantId]);
+            }
+
+            // Landlord/global role (no tenant scope)
+            if ($user->hasRole('super-admin', null)) {
+                return view('landlord.dashboard'); // e.g. resources/views/landlord/dashboard.blade.php
+            }
+
+            // Tenant-scoped roles
+            if ($tenantId && $user->hasRole('admin', $tenantId)) {
+                return view('tenant.admin.dashboard', ['tenant' => $tenantId]); // e.g. resources/views/tenant/admin/dashboard.blade.php
+            }
+
+            if ($tenantId && $user->hasRole('user', $tenantId)) {
+                return view('tenant.user.home', ['tenant' => $tenantId]); // e.g. resources/views/tenant/user/home.blade.php
+            }
+
+            // Fallback if role doesn’t match anything
+            return view('tenant.user.home', ['tenant' => $tenantId]);
+        })->name('guest.home');
+
+        Route::get('/admin/media', [TenantAdminPostController::class, 'create'])
+            ->name('tenant.admin.media.create');
+
+        Route::post('/admin/media', [TenantAdminPostController::class, 'store'])
+            ->name('tenant.admin.media.store');
+
     });
 
 // Central landing shows tenant switcher

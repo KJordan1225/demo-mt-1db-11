@@ -35,6 +35,18 @@ class AuthenticatedSessionController extends Controller
     }
 
     /**
+     * Handle an incoming authentication request.
+     */
+    public function tenantStore(LoginRequest $request): RedirectResponse
+    {
+        $request->authenticate();
+        
+        $request->session()->regenerate();        
+        
+        return redirect()->intended(route('guest.home', ['tenant' => tenant('id')], absolute: false));
+    }
+
+    /**
      * Destroy an authenticated session.
      */
     public function destroy(Request $request): RedirectResponse

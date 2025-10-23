@@ -36,17 +36,19 @@ class ConfigureMicrositeController extends Controller
 			'password_confirmation' => ['required', 'string', 'min:8'],
 		]);
 
-
-		$tenant =Tenant::create([
-			'id'   => $data['id'],
-			'data' => [],
-			'display_name' => $data['display_name'], // Adjust domain as needed
-			'logo_url'      => $data['logo_url'] ?? null,
-			'primary_color' => $data['primary_color'],
-			'accent_color'  => $data['accent_color'],
-			'bg_color'      => $data['bg_color'],
-			'text_color'    => $data['text_color'],
-		]);
+		$data['slug'] = $data['id']; // set slug == id for simplicity 
+        
+        $tenant =Tenant::create([
+            'id'   => $data['id'],
+            'data' => [],
+            'display_name' => $data['display_name'], // Adjust domain as needed
+            'logo_url'      => $data['logo_url'] ?? null,
+            'primary_color' => $data['primary_color'],
+            'accent_color'  => $data['accent_color'],
+            'bg_color'      => $data['bg_color'],
+            'text_color'    => $data['text_color'],
+            'slug'          => $data['id'], // set slug == id for simplicity
+        ]);
 
 		// Per-tenant roles & permissions
 		Tenant::query()->each(function (Tenant $t) {
