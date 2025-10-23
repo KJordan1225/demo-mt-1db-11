@@ -143,6 +143,12 @@ Route::prefix('{tenant}')
         Route::post('/admin/media', [TenantAdminPostController::class, 'store'])
             ->name('tenant.admin.media.store');
 
+        Route::get('/admin/image/posts', [TenantAdminPostController::class, 'accessImagePosts'])
+            ->name('tenant.admin.image.posts');
+
+        Route::get('/admin/video/posts', [TenantAdminPostController::class, 'accessVideoPosts'])
+            ->name('tenant.admin.video.posts');
+
     });
 
 // Central landing shows tenant switcher
@@ -166,27 +172,13 @@ Route::middleware(['web','ctx.tenant'])->group(function () {
     })->name('landlord.home');
 });
 
+Route::get('/{tenant}/posts/{post}', [TenantAdminPostController::class, 'showSingleImagePost'])
+    ->name('tenant.posts.show');
+Route::get('/{tenant}/posts/{post}', [TenantAdminPostController::class, 'showSingleVideoPost'])
+    ->name('tenant.posts.show-vids');
+
 Route::post('/stripe/webhook', [WebhookController::class, 'handleWebhook'])
     ->name('cashier.webhook');   
-
-
-
-
-// Route::prefix('{tenant}')
-//     ->middleware(['web','tenant','ctx.tenant'])
-//     ->group(function () {
-//         Route::get('/dashboard', function (\Illuminate\Http\Request $request) {
-//             $tenantId = $request->attributes->get('tenantId');
-//             abort_unless(auth()->check(), 401);
-//             abort_unless(
-//                 auth()->user()->hasRole('user', $tenantId) || auth()->user()->hasRole('admin', $tenantId),
-//                 403
-//             );
-//             return 'Tenant dashboard: '.$tenantId;
-//         })->name('tenant.dashboard');
-//     });
-
-
 
 
 

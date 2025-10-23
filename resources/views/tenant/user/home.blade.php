@@ -73,17 +73,55 @@
         border: 2px solid #e5e7eb;
         border-radius: .75rem;
     }
+    .link-btn {
+        text-decoration: none;
+        padding: 0.75rem 1.25rem;
+        border-radius: 1rem;
+        font-weight: 600;
+        background-color: var(--brand-primary);
+        color: #fff;
+        display: inline-block;
+        text-align: center;
+    }
+    .link-btn:hover {
+        background-color: var(--brand-accent);
+    }
 </style>
+@php
+    $tenantId = tenant('id');
+    $postImageCount = \App\Models\Post::where('media_type', 'image')
+                 ->where('tenant_id', $tenantId)
+                 ->count();
 
+    $postVideoCount = \App\Models\Post::where('media_type', 'video')
+                 ->where('tenant_id', $tenantId)
+                 ->count();
+@endphp
 <div class="container py-4 py-md-5">
     <!-- Header / Hero -->
     <div class="creator-hero p-4 p-md-5 shadow-smooth mb-4 mb-md-5">
         <div class="row align-items-center g-4">
             <div class="col-md-7">
-                <h1 class="display-5 fw-bold mb-2">Tenant User Home</h1>                
-            </div>            
+                <h1 class="display-5 fw-bold mb-2">Tenant User Home</h1>
+                <p class="lead">Welcome to your tenant dashboard. Choose an option below to view posts with specific media types.</p>
+            </div>
         </div>
-    </div>    
+    </div>
+
+    <!-- Media Type Links -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <a href="{{ route('tenant.admin.image.posts', ['tenant' => $tenantId]) }}" class="link-btn">
+                Posts with Images ( {{ $postImageCount }} )
+            </a>
+        </div>
+        <div class="col-md-6 mb-3">
+            <a href="{{ route('tenant.admin.video.posts', ['tenant' => $tenantId]) }}" class="link-btn">
+                Posts with Videos( {{ $postVideoCount }} )
+            </a>
+        </div>
+    </div>
+
 </div>
 
 @endsection

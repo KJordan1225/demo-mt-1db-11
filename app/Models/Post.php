@@ -24,6 +24,7 @@ class Post extends Model implements HasMedia
         'body',
         'user_id',
         'published_at',
+        'media_type',
         // 'tenant_id' is auto-set by trait; include it in $fillable only if you want manual overrides
     ];
 
@@ -45,7 +46,7 @@ class Post extends Model implements HasMedia
 
         $this->addMediaCollection('videos')
             ->useDisk('public')
-            ->acceptsMimeTypes(['video/mp4','video/webm','video/quicktime']);
+            ->acceptsMimeTypes(['video/mp4','video/webm','video/quicktime']);        
     }
 
     /**
@@ -60,6 +61,12 @@ class Post extends Model implements HasMedia
             $this->addMediaConversion('medium')
                 ->fit(Fit::Contain, 1024, 1024)    // or Cover/Max/etc. as you prefer
                 ->performOnCollections('images','featured_image');
+        }
+
+        if ($media && str_starts_with($media->mime_type, 'video/')) {
+            $this->addMediaConversion('video_thumb')
+                ->fit(Fit::CROP, 300, 300)
+                ->performOnQueue(); // Optional: perform conversion on a queue
         }
     }
 

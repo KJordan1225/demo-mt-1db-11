@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Tenant;
 use Spatie\Image\Enums\Fit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 
 class TenantAdminPostController extends Controller
@@ -23,14 +25,13 @@ class TenantAdminPostController extends Controller
      */
     public function store(Request $request)
     {
-        // Basic content + media type validation
+        // Validate inputs (unchanged)
         $validated = $request->validate([
             'title'         => ['required', 'string', 'max:255'],
             'body'          => ['nullable', 'string'],
             'published_at'  => ['nullable', 'date'],
-            'type'          => ['required', 'in:image,video'],
+            'type'          => ['required', 'in:image,video'],  // <-- this is the selector value
 
-            // File rules — adjust mimes/max to your needs
             'image'         => ['required_if:type,image', 'file', 'mimes:jpg,jpeg,png,gif,webp', 'max:5120'],
             'video'         => ['required_if:type,video', 'file', 'mimes:mp4,webm,mov,qt', 'max:51200'],
         ], [
@@ -42,28 +43,104 @@ class TenantAdminPostController extends Controller
         $tenantId = tenant('id');
         abort_unless(Auth::user()?->hasRole('admin', $tenantId), 403, 'Only tenant admins may post.');
 
-        // Create the post (tenant_id will be auto-set by BelongsToTenant on creating)
-        $post = Post::create([
-            'title'        => $validated['title'],
-            'body'         => $validated['body'] ?? null,
-            'user_id'      => Auth::id(),
-            'published_at' => $validated['published_at'] ?? null,
-            // no need to set tenant_id here; the trait handles it
+        return DB::transaction(function () use ($validated, $request) {
+            // Create the post (tenant_id auto-set by BelongsToTenant)
+            $post = Post::create([
+                'title'        => $validated['title'],
+                'body'         => $validated['body'] ?? null,
+                'user_id'      => Auth::id(),
+                'published_at' => $validated['published_at'] ?? null,
+                'media_type'        => $validated['type'],   // <-- store media type in column
+            ]);
+
+            // If you didn't add 'media' to $fillable, you can alternatively:
+            // $post->forceFill(['media' => $validated['type']])->save();
+
+            // Attach media to the correct collection
+            if ($validated['type'] === 'image' && $request->hasFile('image')) {
+                $post->addMediaFromRequest('image')->toMediaCollection('images'); // or 'featured_image'
+            }
+
+            if ($validated['type'] === 'video' && $request->hasFile('video')) {
+                $post->addMediaFromRequest('video')->toMediaCollection('videos');
+            }
+
+            return redirect()
+                ->back()
+                ->with('status', 'Post created and media uploaded successfully.');
+        });
+    }
+
+    public function index()
+    {
+        $tenantId = tenant('id');
+        $postImageCount = Post::where('media_type', 'image')
+                 ->where('tenant_id', $tenantId)
+                 ->count();
+        $postVideoCount = Post::where('media_type', 'video')
+                 ->where('tenant_id', $tenantId)
+                 ->count();
+
+        return view('tenant.user.home', compact('postImageCount', 'postVideoCount'));
+    }
+
+
+    /**
+     * Display all posts with media type 'image' for the given tenant.
+     */
+    public function accessImagePosts(Tenant $tenantId)
+    {
+        // Ensure tenant_id is valid (optional: depending on your routing method, you may use a route-model binding)
+        $tenantId = tenant('id') ?? $tenantId;
+
+        // Fetch posts where 'media' is 'image' and 'tenant_id' matches the given $tenantId
+        $posts = Post::with('media')  // Eager load associated media
+                     ->where('tenant_id', $tenantId)
+                     ->where('media_type', 'image')  // Only posts with 'image' in the media column
+                     ->get();         
+
+        return view('tenant.admin.image.posts', [
+            'posts' => $posts,
+            'tenantId' => $tenantId,
         ]);
+    }
 
-        // Attach media to the correct collection
-        if ($validated['type'] === 'image' && $request->hasFile('image')) {
-            // Choose which collection you prefer. 'images' (multi) or 'featured_image' (single).
-            $post->addMediaFromRequest('image')->toMediaCollection('images');
-        }
 
-        if ($validated['type'] === 'video' && $request->hasFile('video')) {
-            $post->addMediaFromRequest('video')->toMediaCollection('videos');
-        }
+    public function showSingleImagePost($tenantId, $postId)
+    {
+        // Find the post by ID and ensure tenant is valid
+        $tenant = Tenant::findOrFail($tenantId);
+        $post = Post::findOrFail($postId);
 
-        return redirect()
-            ->back()
-            ->with('status', 'Post created and media uploaded successfully.');
+        return view('tenant.posts.show', compact('post', 'tenant'));
+    }
+
+
+    public function accessVideoPosts(Tenant $tenantId)
+    {
+        // Ensure tenant_id is valid (optional: depending on your routing method, you may use a route-model binding)
+        $tenantId = tenant('id') ?? $tenantId;
+
+        // Fetch posts where 'media' is 'video' and 'tenant_id' matches the given $tenantId
+        $posts = Post::with('media')  // Eager load associated media
+                     ->where('tenant_id', $tenantId)
+                     ->where('media_type', 'video')  // Only posts with 'video' in the media column
+                     ->get();         
+
+        return view('tenant.admin.video.posts', [
+            'posts' => $posts,
+            'tenantId' => $tenantId,
+        ]);
+    }
+
+
+    public function showSingleVideoPost($tenantId, $postId)
+    {
+        // Find the post by ID and ensure tenant is valid
+        $tenant = Tenant::findOrFail($tenantId);
+        $post = Post::findOrFail($postId);
+
+        return view('tenant.posts.show-vids', compact('post', 'tenant'));
     }
 
 }
