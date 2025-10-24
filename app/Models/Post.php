@@ -63,10 +63,13 @@ class Post extends Model implements HasMedia
                 ->performOnCollections('images','featured_image');
         }
 
+        // VIDEOS -> thumbnail from frame at timecode (configured above)
         if ($media && str_starts_with($media->mime_type, 'video/')) {
-            $this->addMediaConversion('video_thumb')
-                ->fit(Fit::CROP, 300, 300)
-                ->performOnQueue(); // Optional: perform conversion on a queue
+            $this->addMediaConversion('thumb')
+                // After the generator creates an image, apply image fit/crop
+                ->fit(Fit::Cover, 640, 360)           // 16:9 thumbnail
+                ->performOnCollections('videos');
+                // ->nonQueued(); // uncomment if you want sync generation during upload
         }
     }
 

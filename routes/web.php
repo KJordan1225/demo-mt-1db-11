@@ -27,6 +27,11 @@ if (file_exists(__DIR__.'/guestAuth.php')) {
 Route::get('login', [AuthenticatedSessionController::class, 'create'])
     ->name('login');
 
+Route::get('/{tenant}/posts/image/{post}', [TenantAdminPostController::class, 'showSingleImagePost'])
+    ->name('post.show');
+Route::get('/{tenant}/posts/{post}', [TenantAdminPostController::class, 'showSingleVideoPost'])
+    ->name('tenant.posts.show-vids');
+
 Route::post('login', [AuthenticatedSessionController::class, 'store']);
 
 // Landlord registration route
@@ -171,11 +176,6 @@ Route::middleware(['web','ctx.tenant'])->group(function () {
         return 'Landlord area';
     })->name('landlord.home');
 });
-
-Route::get('/{tenant}/posts/{post}', [TenantAdminPostController::class, 'showSingleImagePost'])
-    ->name('tenant.posts.show');
-Route::get('/{tenant}/posts/{post}', [TenantAdminPostController::class, 'showSingleVideoPost'])
-    ->name('tenant.posts.show-vids');
 
 Route::post('/stripe/webhook', [WebhookController::class, 'handleWebhook'])
     ->name('cashier.webhook');   

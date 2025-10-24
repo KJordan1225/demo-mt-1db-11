@@ -11,6 +11,8 @@
     /** @var \App\Models\User|null $user */
     $user = Auth::user();
 
+    $temp = request()->route('tenant') ?? request()->segment(1);
+
     // If you're in tenant scope, this will be the tenant id (string); otherwise null
     $tenantId = function_exists('tenant') ? tenant('id') : null;
 @endphp
@@ -146,7 +148,7 @@
                         <div class="card-body">
                             <nav class="nav flex-column">
                                 <a class="nav-link {{ request()->routeIs('tenant.dashboard') ? 'active' : '' }}"
-                                   href="#">
+                                   href="{{ url('/' . $tenantId . '/home') }}" >
                                     <span class="me-2">🏠</span> Dashboard
                                 </a>
 

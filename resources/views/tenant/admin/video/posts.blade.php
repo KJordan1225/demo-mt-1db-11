@@ -11,11 +11,12 @@
             <div class="col-12 col-sm-6 col-md-4">
                 <div class="card shadow-sm">
                     <!-- Video Thumbnail Section (clickable) -->
-                    <a href="{{ route('tenant.posts.show-vids', ['tenant' => $tenantId, 'post' => $post->id]) }}" >
-                        <img src="{{ $post->getFirstMediaUrl('videos', 'video_thumb') }}" 
-                             class="card-img-top" alt="{{ $post->title }}" 
-                             style="object-fit: cover; height: 200px;">                        
-                    </a>
+                    <div class="mb-4">
+                        <video class="img-fluid rounded" controls>
+                            <source src="{{ $post->getFirstMediaUrl('videos', 'thumb') }}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
                     
                     <!-- Card Body Section -->
                     <div class="card-body">
