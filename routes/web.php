@@ -8,9 +8,11 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TenantSwitchController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Connect\PricingController;
 use App\Http\Controllers\TenantAdminPostController;
 use App\Http\Controllers\Tenant\DashboardController;
 use App\Http\Controllers\ConfigureMicrositeController;
+use App\Http\Controllers\Connect\OnboardingController;
 use Stancl\Tenancy\Middleware\InitializeTenancyByPath;
 use Laravel\Cashier\Http\Controllers\WebhookController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
@@ -140,7 +142,7 @@ Route::prefix('{tenant}')
 
             // Fallback if role doesn’t match anything
             return view('tenant.user.home', ['tenant' => $tenantId]);
-        })->name('guest.home');
+        })->name('guest.home');       
 
         Route::get('/admin/media', [TenantAdminPostController::class, 'create'])
             ->name('tenant.admin.media.create');
@@ -155,6 +157,20 @@ Route::prefix('{tenant}')
             ->name('tenant.admin.video.posts');
 
     });
+
+// Creator stripe onboarding
+Route::get('/{tenant}/connect/onboarding', [OnboardingController::class, 'start'])
+    ->name('tenant.connect.onboarding');
+    
+Route::get('/{tenant}/connect/onboarding/return', [OnboardingController::class, 'return'])
+    ->name('tenant.connect.return');
+
+// Creator stripe pricing
+Route::post('/{tenant}/pricing', [PricingController::class, 'store'])
+    ->name('tenant.pricing.store');
+
+Route::get('/{tenant}/pricing/subscribe', [PricingController::class, 'showSubscriptionForm'])
+    ->name('tenant.pricing.subscribe');
 
 // Central landing shows tenant switcher
 Route::get('/', [TenantSwitchController::class, 'index'])->name('home');

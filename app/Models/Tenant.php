@@ -14,7 +14,22 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     use HasDatabase, HasDomains;
 
     protected $casts = ['data' => 'array'];
-    protected $guarded = []; // or: protected $guarded = [];
+	protected $fillable = [ 
+						'display_name',
+						'slug', 
+						'data',
+						'domain_name',
+						'logo_url',
+						'primary_color',
+						'accent_color',
+						'bg_color',
+						'text_color',
+						'stripe_account_id',
+						'stripe_payouts_enabled',
+						'stripe_details_submitted',
+						'stripe_product_id',
+						'stripe_price_id',
+					]; // or: protected $guarded = [];
 
     // Relationship to users
     public function users(): HasMany

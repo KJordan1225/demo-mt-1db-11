@@ -170,8 +170,12 @@
                                        href="#">
                                         <span class="me-2">👥</span> Users
                                     </a>
+                                    <a class="nav-link {{ request()->routeIs('tenant.connect.onboarding') ? 'active' : '' }}"
+                                       href="{{ route('tenant.connect.onboarding', ['tenant' => $tenantId]) }}">
+                                        Onboarding
+                                    </a>
                                     <a class="nav-link {{ request()->routeIs('tenant.admin.media.create') ? 'active' : '' }}"
-                                       href="{{ route('tenant.admin.media.create', ['tenant' => $branding['slug']]) }}">
+                                       href="{{ route('tenant.admin.media.create', ['tenant' => $tenantId]) }}">
                                         <span class="me-2">👥</span> Upload Media
                                     </a>
                                 @endif

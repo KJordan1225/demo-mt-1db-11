@@ -72,7 +72,7 @@
                     <li class="nav-item">
                         <a
                             class="nav-link text-white {{ request()->routeIs('guest.home') ? 'active' : '' }}"
-                            href="{{ route('guest.home') }}"
+                            href="#"
                             style="font-size:20px;"
                         >
                             Home

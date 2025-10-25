@@ -161,7 +161,7 @@
         {{-- Submit --}}
         <div class="col-12 d-flex gap-2">
             <button type="submit" class="btn btn-primary">Create Tenant</button>
-            <a href="{{ route('guest.home') }}" class="btn btn-outline-secondary">Back</a>
+            <a href="#" class="btn btn-outline-secondary">Back</a>
         </div>
     </form>
 </div>
