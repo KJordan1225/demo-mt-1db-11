@@ -118,9 +118,11 @@ class OnboardingController extends Controller
             'stripe_details_submitted' => $account->details_submitted,
         ]);
 
-        return redirect()
-            ->route('tenant.dashboard', ['tenant' => $tenant->id])
-            ->with('status', 'Stripe account connected and payout setup complete!');
+        return view('tenant.admin.dashboard', [
+            'tenant' => $tenant,
+            'status' => 'Stripe account connected and payout setup complete!',
+        ]);
+
     }
 
     /**

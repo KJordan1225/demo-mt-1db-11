@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Http\Controllers\Controller;
-use App\Http\Requests\Auth\LoginRequest;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Tenant;
 use Illuminate\View\View;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Cookie;
+use App\Http\Requests\Auth\LoginRequest;
 
 
 class AuthenticatedSessionController extends Controller
@@ -31,7 +32,20 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('guest.home', absolute: false));
+        // boolean
+        $inTenant = tenancy()->initialized;
+
+        // current tenant model or null
+        $currentTenant = tenant();        // same as tenancy()->tenant
+        $tenantId = tenant('id');         // null if not in tenant context
+
+        if ($inTenant) {
+            // tenant-specific logic
+            return redirect()->intended(route('guest.home', ['tenant' => tenant('id')], absolute: false));
+        } else {
+                // landlord-specific logic
+            return redirect()->intended(route('guest.home', absolute: false));
+        }
     }
 
     /**
@@ -55,9 +69,25 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->invalidate();
 
-        $request->session()->regenerateToken();
+        $request->session()->regenerateToken();        
 
         return redirect('/');
+    }
+
+    public function tenantDestroy(Request $request): View
+    {
+        Auth::guard('web')->logout(); 
+        
+        $tenantId = tenant('id'); // Get the tenant's slug from the tenant context
+
+        $request->session()->invalidate();
+
+        $request->session()->regenerateToken();        
+
+        return view('tenant.landing', [
+            'tenantId' => $tenantId, 
+        ]);
+
     }
 
 }

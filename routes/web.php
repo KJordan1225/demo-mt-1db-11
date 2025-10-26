@@ -5,7 +5,6 @@ use App\Http\Controllers\PlanController;
 use App\Http\Controllers\GuestController;
 use App\Http\Controllers\TenantController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TenantSwitchController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Connect\PricingController;
@@ -15,6 +14,7 @@ use App\Http\Controllers\ConfigureMicrositeController;
 use App\Http\Controllers\Connect\OnboardingController;
 use Stancl\Tenancy\Middleware\InitializeTenancyByPath;
 use Laravel\Cashier\Http\Controllers\WebhookController;
+use App\Http\Controllers\Connect\SubscriptionController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 
 
@@ -28,25 +28,6 @@ if (file_exists(__DIR__.'/guestAuth.php')) {
 
 Route::get('login', [AuthenticatedSessionController::class, 'create'])
     ->name('login');
-
-Route::get('/{tenant}/posts/image/{post}', [TenantAdminPostController::class, 'showSingleImagePost'])
-    ->name('post.show');
-Route::get('/{tenant}/posts/{post}', [TenantAdminPostController::class, 'showSingleVideoPost'])
-    ->name('tenant.posts.show-vids');
-
-Route::post('login', [AuthenticatedSessionController::class, 'store']);
-
-// Landlord registration route
-Route::get('/register-landlord', [RegisterController::class, 'showLandlordForm'])
-    ->name('register.landlord');
-Route::post('/register-landlord', [RegisterController::class, 'registerLandlord'])
-    ->name('register.landlord.store');
-// Tenant registration route (pass tenant slug)
-Route::get('/register/{tenantSlug}', [RegisterController::class, 'showTenantForm'])
-    ->name('register.tenant');
-Route::post('/register/{tenantSlug}', [RegisterController::class, 'registerTenant'])
-    ->name('register.tenant.store');
-
 
 Route::prefix('guest')->name('guest.')->group(function () {
     Route::get('/', [GuestController::class, 'home'])->name('home');          // /guest
@@ -73,6 +54,23 @@ Route::prefix('guest')->name('guest.')->group(function () {
     Route::post('/microsite/configure', [ConfigureMicrositeController::class, 'store'])->name('microsite.configure.store');
 });
 
+Route::get('/{tenant}/posts/image/{post}', [TenantAdminPostController::class, 'showSingleImagePost'])
+    ->name('post.show');
+Route::get('/{tenant}/posts/{post}', [TenantAdminPostController::class, 'showSingleVideoPost'])
+    ->name('tenant.posts.show-vids');
+
+Route::post('login', [AuthenticatedSessionController::class, 'store']);
+
+// Landlord registration route
+Route::get('/register-landlord', [RegisterController::class, 'showLandlordForm'])
+    ->name('register.landlord');
+Route::post('/register-landlord', [RegisterController::class, 'registerLandlord'])
+    ->name('register.landlord.store');
+// Tenant registration route (pass tenant slug)
+Route::get('/register/{tenantSlug}', [RegisterController::class, 'showTenantForm'])
+    ->name('register.tenant');
+Route::post('/register/{tenantSlug}', [RegisterController::class, 'registerTenant'])
+    ->name('register.tenant.store');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard
@@ -156,6 +154,9 @@ Route::prefix('{tenant}')
         Route::get('/admin/video/posts', [TenantAdminPostController::class, 'accessVideoPosts'])
             ->name('tenant.admin.video.posts');
 
+        Route::get('/user/post-list', [TenantAdminPostController::class, 'postList'])
+            ->name('tenant.user.post-list');
+
     });
 
 // Creator stripe onboarding
@@ -171,6 +172,18 @@ Route::post('/{tenant}/pricing', [PricingController::class, 'store'])
 
 Route::get('/{tenant}/pricing/subscribe', [PricingController::class, 'showSubscriptionForm'])
     ->name('tenant.pricing.subscribe');
+
+// Creator subscription handling
+Route::middleware('auth')->group(function () {
+    Route::post('/{tenant}/subscribe',        [SubscriptionController::class, 'subscribe'])
+        ->name('tenant.subscribe');
+    Route::get('/{tenant}/subscribe/success', [SubscriptionController::class, 'success'])
+        ->name('tenant.subscribe.success');
+    Route::get('/{tenant}/subscribe/cancel',  [SubscriptionController::class, 'cancel'])
+        ->name('tenant.subscribe.cancel');
+});
+
+
 
 // Central landing shows tenant switcher
 Route::get('/', [TenantSwitchController::class, 'index'])->name('home');

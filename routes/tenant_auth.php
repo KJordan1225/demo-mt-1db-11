@@ -74,7 +74,7 @@ Route::middleware('auth')->group(function () {
         ->name('tenant.password.update.profile');
 
     // Logout
-    Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
+    Route::post('logout', [AuthenticatedSessionController::class, 'tenantDestroy'])
         ->name('tenant.logout');
 });
 

@@ -125,7 +125,7 @@
                             @endif
                         </span>
 
-                        <form method="POST" action="#" class="m-0">
+                        <form method="POST" action="{{ route('tenant.logout', ['tenant'=> $tenantId]) }}" class="m-0">
                             @csrf
                             <button class="btn btn-sm btn-light" type="submit">Log out</button>
                         </form>

@@ -143,4 +143,9 @@ class TenantAdminPostController extends Controller
         return view('tenant.posts.show-vids', compact('post', 'tenant'));
     }
 
+    public function postList() 
+    {
+        return view('tenant.user.posts_list');
+    }
+
 }

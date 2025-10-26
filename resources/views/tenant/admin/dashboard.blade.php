@@ -1,6 +1,26 @@
 @extends('layouts.creator')
 
 @section('content')
+
+@php
+    use Illuminate\Support\Facades\Auth;
+
+    // $branding is shared (display_name, slug, colors, logo_url)
+    $pageTitle = trim($__env->yieldContent('title'));
+    $title = $pageTitle
+        ? $pageTitle.' · '.$branding['display_name']
+        : $branding['display_name'].' · Dashboard';
+    $title = 'Super Admin Dashboard';
+
+    /** @var \App\Models\User|null $user */
+    $user = Auth::user();
+
+    $temp = request()->route('tenant') ?? request()->segment(1);
+
+    // If you're in tenant scope, this will be the tenant id (string); otherwise null
+    $tenantId = function_exists('tenant') ? tenant('id') : null;
+@endphp
+
 <style>
     /* Page theming (uses your brand vars if present) */
     :root{
@@ -83,7 +103,45 @@
                 <h1 class="display-5 fw-bold mb-2">Tenant Admin Dashboard</h1>                
             </div>            
         </div>
-    </div>    
+    </div> 
+    
+    <!-- Title and description -->
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h1 class="display-5 fw-bold">Admin Actions</h1>
+            <p class="text-muted">Manage your creator's account and perform actions here</p>
+        </div>
+    </div>
+
+    <!-- Admin Actions Card -->
+    <div class="row">
+        <div class="col-12 col-md-6 col-lg-4 mx-auto">
+            <div class="card shadow-lg rounded-3 border-light">
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <h4 class="card-title m-0">Admin Actions</h4>
+                </div>
+                <div class="card-body">
+                    <p class="card-text text-muted mb-4">As an admin, you can manage your account and perform necessary actions related to the creator's business.</p>
+
+                    <!-- Action 1: Connect Payment Account -->
+                    <a href="{{ route('tenant.connect.onboarding', ['tenant' => $tenantId]) }}" 
+                        class="btn btn-outline-primary btn-lg btn-block text-center w-100 mb-3">
+                        <i class="bi bi-wallet2"></i> Connect Payment Account
+                    </a>
+
+                    <!-- Action 2: Placeholder Link -->
+                    <a href="{{ route('tenant.admin.media.create', ['tenant' => $tenantId]) }}" 
+                        class="btn btn-outline-primary btn-lg btn-block text-center w-100 mb-3">
+                        <i class="bi bi-dash-circle"></i> Upload Media
+                    </a>
+                </div>
+                <div class="card-footer text-center">
+                    <small class="text-muted">Manage all admin actions in one place.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 @endsection
