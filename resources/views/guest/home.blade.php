@@ -163,7 +163,7 @@
                                 <p class="text-muted small mt-2">
                                     Tip: Pick a short, memorable name—avoid spaces and special characters.
                                 </p>
-                                <a href="{{ route('register', null) }}"
+                                <a href="#"
                                    class="btn btn-outline-primary">
                                     Go to Registration
                                 </a>
@@ -220,10 +220,12 @@
                         Create your site in minutes and unlock subscription income today.
                     </p>
                     <div class="d-grid gap-2">
-                        <a href="#"
-                           class="btn btn-primary btn-lg">Choose a Plan</a>
-                        <a href="{{ route('register', null) }}"
-                           class="btn btn-outline-primary">Register Your Site</a>
+                        <a href="{{ route('landlord.login') }}"
+                           class="btn btn-primary btn-lg">Register/Login to Become a Creator</a>
+                        <a href="{{ route('guest.plans') }}"
+                           class="btn btn-outline-primary">Choose a Plan</a>
+                        <a href="{{ route('guest.create.microsite') }}"
+                           class="btn btn-outline-primary">Establish Your Micro-site</a>
                     </div>
 
                     <hr class="my-4">
@@ -245,8 +247,8 @@
                         We’re happy to help you pick a plan and set up. Check our quick start guide or reach out.
                     </p>
                     <div class="d-grid gap-2">
-                        <a href="{{ route('guest.about') ?? '#' }}" class="btn btn-light border">Quick Start Guide</a>
-                        <a href="{{ route('guest.contact') ?? '#' }}" class="btn btn-light border">Contact Support</a>
+                        <a href="#" class="btn btn-light border">Quick Start Guide</a>
+                        <a href="#" class="btn btn-light border">Contact Support</a>
                     </div>
                 </div>
             </div>

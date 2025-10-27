@@ -52,7 +52,7 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect(route('tenants.index', absolute: false));
+        return redirect(route('guest.home', absolute: false));
     }
 
     public function tenantStore(Request $request): RedirectResponse

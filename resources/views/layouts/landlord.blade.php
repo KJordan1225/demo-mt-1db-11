@@ -52,11 +52,11 @@
 
             {{-- Brand --}}
             <a class="navbar-brand d-flex align-items-center gap-2"
-            href="{{ route('tenant.dashboard', ['tenant' => $branding['slug']]) }}">
+            href="#">
                 @if(!empty($branding['logo_url']))
                     <img src="{{ $branding['logo_url'] }}" class="tenant-logo" alt="Logo">
                 @endif
-                <span class="fw-semibold">{{ $branding['display_name'] ?? 'My Site' }}</span>
+                <span class="fw-semibold">StarCity Starz</span>
             </a>
 
             {{-- Mobile toggler for the horizontal nav links --}}
@@ -72,7 +72,7 @@
                     <li class="nav-item">
                         <a
                             class="nav-link text-white {{ request()->routeIs('guest.home') ? 'active' : '' }}"
-                            href="{{ route('guest.home') }}"
+                            href="#"
                             style="font-size:20px;"
                         >
                             Home
@@ -81,14 +81,14 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link text-white{{ request()->routeIs('guestr.about') ? 'active' : '' }}"
-                            href="{{ route('guest.about') }}"
+                            href="#"
                             style="font-size:20px;">
                             Plans
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link text-white{{ request()->routeIs('guest.contact') ? 'active' : '' }}"
-                            href="{{ route('guest.contact') }}"
+                            href="#"
                             style="font-size:20px;">
                             Contact
                         </a>
@@ -97,16 +97,22 @@
 
                 {{-- Right-side top nav (tenant badge + auth) --}}
                 <div class="ms-lg-auto d-flex align-items-center gap-3">
-                    <span class="text-white-50 small d-none d-sm-inline">
-                        Tenant: <strong>{{ $branding['slug'] }}</strong>
-                    </span>
-
                     @auth
-                        <form method="POST" action="{{ route('logout') }}" class="m-0">
-                            @csrf
-                            <button class="btn btn-sm btn-light" type="submit">Log out</button>
-                        </form>
-                    @endauth
+                    {{-- Tenant badge --}}
+                    <span class="text-white-50 small d-none d-sm-inline">
+                        Logged in: <strong>{{ auth()->user()->name }}</strong>
+                    </span>
+                    @else
+                    <span class="text-white-50 small d-none d-sm-inline">
+                        Not Logged In
+                    </span>
+                    @endauth                
+                    
+                    <form method="POST" action="{{ route('landlord.logout') }}" class="m-0">
+                        @csrf
+                        <button class="btn btn-sm btn-light" type="submit">Log out</button>
+                    </form>
+                    
                 </div>
             </div>
         </div>
@@ -123,7 +129,7 @@
                         <div class="card-body">
                             <nav class="nav flex-column">
                                 <a class="nav-link {{ request()->routeIs('tenant.dashboard') ? 'active' : '' }}"
-                                   href="{{ route('dashboard', ['tenant' => $branding['slug']]) }}">
+                                   href="#">
                                     <span class="me-2">🏠</span> Dashboard
                                 </a>
 
@@ -141,12 +147,12 @@
                         <div class="card-body">
                             <nav class="nav flex-column">
                                 <a class="nav-link d-flex align-items-center {{ request()->routeIs('tenants.index') ? 'active' : '' }}"
-                                href="{{ route('tenants.index') }}">
+                                href="#">
                                     <span class="me-2">📋</span> List Tenants
                                 </a>
 
                                 <a class="nav-link d-flex align-items-center {{ request()->routeIs('tenants.create') ? 'active' : '' }}"
-                                href="{{ route('tenants.create') }}">
+                                href="#">
                                     <span class="me-2">➕</span> Add Tenant
                                 </a>
 
@@ -178,7 +184,7 @@
                     <div class="offcanvas-body">
                         <nav class="nav flex-column">
                             <a class="nav-link {{ request()->routeIs('tenant.dashboard') ? 'active' : '' }}"
-                               href="{{ route('tenant.dashboard', ['tenant' => $branding['slug']]) }}">
+                               href="#">
                                 <span class="me-2">🏠</span> Dashboard
                             </a>
                             @yield('sidebar')

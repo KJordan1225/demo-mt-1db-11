@@ -1,12 +1,16 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\GuestController;
 use App\Http\Controllers\TenantController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TenantSwitchController;
+use App\Http\Controllers\LandlordPlansController;
 use App\Http\Controllers\Tenant\DashboardController;
-use App\Http\Controllers\GuestController;
 use Stancl\Tenancy\Middleware\InitializeTenancyByPath;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\SubscriptionController;
+
 
 // ----- Landlord (central) -----
 Route::get('/', fn () => view('welcome'))->name('home');
@@ -16,13 +20,36 @@ if (file_exists(__DIR__.'/auth.php')) {
     require __DIR__.'/auth.php';
 }
 
-Route::prefix('guest')->name('guest.')->group(function () {
+Route::name('guest.')->group(function () {
     Route::get('/', [GuestController::class, 'home'])->name('home');          // /guest
     Route::get('/about', [GuestController::class, 'about'])->name('about');   // /guest/about
 	Route::get('/sign_up', [GuestController::class, 'sign_up'])->name('sign_up');
     Route::get('/contact', [GuestController::class, 'contact'])->name('contact'); // /guest/contact
     Route::post('/contact', [GuestController::class, 'send'])->name('contact.send');
+    Route::get('/plans', [LandlordPlansController::class, 'index'])->name('plans'); // /guest/plans
+    Route::get('/create-microsite', [LandlordPlansController::class, 'showCreateMicroSiteForm'])
+        ->name('create.microsite'); 
+    Route::post('/create-microsite', [LandlordPlansController::class, 'storeCreateMicroSiteForm'])
+        ->name('store.microsite');
 });
+
+
+
+// Central landlord login page
+Route::get('/landload/login', [TenantSwitchController::class, 'index'])
+    ->name('landlord.login');
+Route::post('/landlord/logout', [AuthenticatedSessionController::class, 'destroy'])
+    ->name('landlord.logout');
+
+// Routes to creator subscription plans
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::post('/subscribe/basic', [SubscriptionController::class, 'subscribeBasic'])
+    ->name('subscribe.basic');
+    Route::post('/subscribe/premium', [SubscriptionController::class, 'subscribePremium'])
+        ->name('subscribe.premium');
+});
+
+
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard
@@ -52,21 +79,16 @@ Route::prefix('{tenant}')
         // Tenant-auth routes (prefixed names to avoid clashes with landlord)
         if (file_exists(__DIR__.'/tenant_auth.php')) {
             require __DIR__.'/tenant_auth.php';
-        }
-
-        // Route::get('/', fn () => redirect()->route('tenant.landing', ['tenant' => tenant('id')]))
-        //     ->name('tenant.home');
+        }        
 
         // routes/web.php (inside your {tenant} + web + tenant middleware group)
         Route::get('/', fn () => view('tenant.landing', ['tenant' => tenant('id')]))
             ->name('tenant.landing');
 
         Route::get('/dashboard', [DashboardController::class, 'index'])
-            ->name('tenant.dashboard');
+            ->name('tenant.dashboard');        
+        
     });
-
-// Central landing shows tenant switcher
-Route::get('/', [TenantSwitchController::class, 'index'])->name('home');
 
 // Handle manual entry of a tenant id and redirect to /{tenant}/login
 Route::post('/tenant/switch', [TenantSwitchController::class, 'switch'])
@@ -88,19 +110,6 @@ Route::middleware(['web','ctx.tenant'])->group(function () {
 
 
 
-// Route::prefix('{tenant}')
-//     ->middleware(['web','tenant','ctx.tenant'])
-//     ->group(function () {
-//         Route::get('/dashboard', function (\Illuminate\Http\Request $request) {
-//             $tenantId = $request->attributes->get('tenantId');
-//             abort_unless(auth()->check(), 401);
-//             abort_unless(
-//                 auth()->user()->hasRole('user', $tenantId) || auth()->user()->hasRole('admin', $tenantId),
-//                 403
-//             );
-//             return 'Tenant dashboard: '.$tenantId;
-//         })->name('tenant.dashboard');
-//     });
 
 
 

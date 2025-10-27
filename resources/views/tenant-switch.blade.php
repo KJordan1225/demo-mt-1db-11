@@ -58,7 +58,7 @@
                     @endif
 
                     <h1 class="display-5 fw-semibold brand-title mb-2">
-                        {{ $branding['display_name'] }}
+                        StarCity Starz 
                     </h1>
 
                     <div class="text-muted">
@@ -153,7 +153,7 @@
                                 <div class="text-center mt-3">
                                     <span class="small text-muted">New here?</span>
                                     <a class="small ms-1 link-brand"
-                                       href="{{ route('tenant.register', ['tenant' => $branding['slug']]) }}">
+                                       href="{{ route('register') }}">
                                        Create an account
                                     </a>
                                 </div>
@@ -162,7 +162,7 @@
                     </div>
 
                     <div class="text-center mt-4 small text-muted">
-                        &copy; {{ date('Y') }} {{ $branding['display_name'] }}
+                        &copy; {{ date('Y') }} StarCity Starz
                     </div>
                 </div>
             </div>
