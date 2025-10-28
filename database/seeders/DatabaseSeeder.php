@@ -5,19 +5,20 @@ namespace Database\Seeders;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Database\Seeders\RbacSeeder;
 
 class DatabaseSeeder extends Seeder
 {
     /**
      * Seed the application's database.
      */
-    public function run(): void
+    public function run()
     {
-        // User::factory(10)->create();
+        // Add your seeding logic here
+        
+        // Run the RbacSeeder
+        $this->call(RbacSeeder::class);  // This will execute the RbacSeeder
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // You can add any other seeders or logic you need after running RbacSeeder
     }
 }

@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'stripe' => [
+        'key'    => env('STRIPE_KEY'),         // The public API key (publishable key)
+        'secret' => env('STRIPE_SECRET'),      // The secret API key
+    ],
+
 ];

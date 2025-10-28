@@ -9,11 +9,12 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Laravel\Cashier\Billable;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, BelongsToTenant;
+    use HasFactory, Notifiable, BelongsToTenant, Billable;
 
     /**
      * The attributes that are mass assignable.
@@ -91,4 +92,10 @@ class User extends Authenticatable
 
         return $this->permissions($tenantId)->where('name', $permissionName)->exists();
     }
+
+    public function isSubscribedToLandlordPlan()
+    {
+        return $this->subscribed('landlord');
+    }
+
 }

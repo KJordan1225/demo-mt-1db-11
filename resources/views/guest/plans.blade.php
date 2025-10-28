@@ -102,7 +102,10 @@
                             <li><i class="bi bi-check-circle"></i> Basic support</li>
                         </ul>
                         <div class="d-flex justify-content-center">
-                            <a href="#" class="btn btn-primary">Choose Plan</a>
+                            <form action="{{ route('subscribe.basic') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="btn btn-primary">Subscribe to Basic Plan</button>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -124,7 +127,10 @@
                             <li><i class="bi bi-check-circle"></i> Enhanced visibility</li>
                         </ul>
                         <div class="d-flex justify-content-center">
-                            <a href="#" class="btn btn-success">Choose Plan</a>
+                            <form action="{{ route('subscribe.premium') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="btn btn-success">Subscribe to Premium Plan</button>
+                            </form>
                         </div>
                     </div>
                 </div>

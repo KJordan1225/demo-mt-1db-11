@@ -18,7 +18,7 @@ class CreateSubscriptionsTable extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade'); // User this subscription belongs to
             
             // Change tenant_id to string and remove foreign key constraint
-            $table->string('tenant_id'); // Tenant this subscription is for (now a string)
+            $table->string('tenant_id')->nullabe(); // Tenant this subscription is for (now a string)
             
             $table->string('stripe_subscription_id'); // Stripe subscription ID
             $table->enum('status', ['active', 'canceled', 'past_due'])->default('active'); // Subscription status

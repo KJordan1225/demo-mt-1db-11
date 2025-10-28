@@ -47,6 +47,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     ->name('subscribe.basic');
     Route::post('/subscribe/premium', [SubscriptionController::class, 'subscribePremium'])
         ->name('subscribe.premium');
+    Route::get('/subscribe/success', [SubscriptionController::class, 'success'])
+        ->name('subscribe.success');
+    Route::get('/subscribe/cancel', [SubscriptionController::class, 'cancel'])
+        ->name('subscribe.cancel');
 });
 
 

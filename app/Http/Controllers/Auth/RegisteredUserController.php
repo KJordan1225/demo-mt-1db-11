@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\View\View;
 use Illuminate\Http\Request;
@@ -49,6 +50,13 @@ class RegisteredUserController extends Controller
         ]);
 
         event(new Registered($user));
+
+        if ($user->name === 'Super Admin') {
+            $tid = NULL;
+            $tAdmin = Role::firstOrCreate(['name' => 'super-admin', 'tenant_id' => $tid]);
+            // Assign the roleto new user
+            $user->roles()->attach($tAdmin->id, ['tenant_id' => $tenant->id ?? null]);
+        }
 
         Auth::login($user);
 
