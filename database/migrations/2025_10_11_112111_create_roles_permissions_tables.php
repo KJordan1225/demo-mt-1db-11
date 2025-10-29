@@ -42,6 +42,7 @@ return new class extends Migration {
             $table->primary(['role_id', 'user_id']);
             $table->foreign('role_id')->references('id')->on('roles')->cascadeOnDelete();
             $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
+            $table->timestamps();
         });
     }
 

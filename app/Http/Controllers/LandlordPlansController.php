@@ -45,7 +45,7 @@ class LandlordPlansController extends Controller
             // New validation rule for name field
             'name' => ['required', 'string', 'max:255'],  // Name is required, should be a string, and have a maximum length of 255 characters
         ]);
-
+        // 1) Create the tenant (micro-site)
         $tenant =Tenant::create([
             'id'   => $data['id'],
             'data' => [],

@@ -1,6 +1,10 @@
 @extends('layouts.landlord')
 
 @section('content')
+@php 
+    $tenantid = tenant('id');
+    $tenant = tenant();
+@endphp
 <div class="container-fluid">
     <div class="row">
         <!-- Sidebar -->
@@ -40,7 +44,7 @@
         <!-- Main Content -->
         <div class="col-md-9 col-lg-10 ms-sm-auto px-4">
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                <h1 class="h2">Welcome, {{ auth()->user()->name }}</h1>
+                <h1 class="h2">Welcome, {{ $tenant->display_name }}</h1>
             </div>
 
             <div class="row">
