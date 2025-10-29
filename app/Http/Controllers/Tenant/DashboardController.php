@@ -16,5 +16,23 @@ class DashboardController extends Controller
 
         return view('dashboard');
     }
-}
+
+    public function tenantAdminDashboard()
+    {
+        $pendingRequests = 0;
+        $newSignups = 0;
+        $activeSubscriptions = 0;
+        $userCount = 0;
+        $subscriptions = [];
+        $notifications = [];
+        
+        return view('tenant.admin.dashboard', 
+            compact('pendingRequests', 
+                    'newSignups', 
+                    'activeSubscriptions',
+                    'userCount',
+                    'subscriptions',
+                    'notifications'));
+    }
+}   
 

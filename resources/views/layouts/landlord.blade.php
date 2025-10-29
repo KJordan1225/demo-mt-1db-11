@@ -102,17 +102,18 @@
                     <span class="text-white-50 small d-none d-sm-inline">
                         Logged in: <strong>{{ auth()->user()->name }}</strong>
                     </span>
-                    @else
-                    <span class="text-white-50 small d-none d-sm-inline">
-                        Not Logged In
-                    </span>
-                    @endauth                
-                    
                     <form method="POST" action="{{ route('landlord.logout') }}" class="m-0">
                         @csrf
                         <button class="btn btn-sm btn-light" type="submit">Log out</button>
                     </form>
-                    
+                    @else
+                    <span class="text-white-50 small d-none d-sm-inline">
+                        Not Logged In
+                    </span> 
+                    <a href="{{ route('landlord.login') }}" class="btn btn-primary btn-sm">
+                        Login
+                    </a>                   
+                    @endauth
                 </div>
             </div>
         </div>

@@ -4,12 +4,13 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Models\Role;
+use App\Models\Subscription;
+use Laravel\Cashier\Billable;
 use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Laravel\Cashier\Billable;
 
 class User extends Authenticatable
 {
@@ -51,19 +52,25 @@ class User extends Authenticatable
         ];
     }
 
-    public function roles(): BelongsToMany
+    public function roles()
     {
-        return $this->belongsToMany(Role::class, 'role_user');
+        return $this->belongsToMany(Role::class, 'role_user')
+            ->withPivot('tenant_id')
+            ->withTimestamps();
     }
 
-    /** Check a role in a context (tenant_id null = landlord) */
     public function hasRole(string $name, ?string $tenantId = null): bool
     {
         return $this->roles()
-            ->where('name', $name)
-            ->where('tenant_id', $tenantId)
+            ->where('roles.name', $name) // qualify column
+            ->when(
+                $tenantId !== null,
+                fn ($q) => $q->where('role_user.tenant_id', $tenantId), // pivot table
+                fn ($q) => $q->whereNull('role_user.tenant_id')
+            )
             ->exists();
     }
+
 
     /** Query permissions available to this user in a context */
     public function permissions(?string $tenantId = null)
@@ -96,6 +103,11 @@ class User extends Authenticatable
     public function isSubscribedToLandlordPlan()
     {
         return $this->subscribed('landlord');
+    }
+
+    public function subscriptions()
+    {
+        return $this->hasMany(Subscription::class);
     }
 
 }

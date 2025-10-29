@@ -4,12 +4,14 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\GuestController;
 use App\Http\Controllers\TenantController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TenantSwitchController;
 use App\Http\Controllers\LandlordPlansController;
 use App\Http\Controllers\Tenant\DashboardController;
+use App\Http\Controllers\LandlordDashboardController;
 use Stancl\Tenancy\Middleware\InitializeTenancyByPath;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
-use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\Tenant\SubscriptionManageController;
 
 
 // ----- Landlord (central) -----
@@ -19,6 +21,11 @@ Route::get('/', fn () => view('welcome'))->name('home');
 if (file_exists(__DIR__.'/auth.php')) {
     require __DIR__.'/auth.php';
 }
+
+// Landlord-level subscriptions management (not tenant-scoped)
+Route::get('/admin/dashboard', [LandlordDashboardController::class, 'index'])
+    ->middleware(['web', 'auth'])   // Add 'verified' if you require verified emails
+    ->name('landlord.dashboard.index');
 
 Route::name('guest.')->group(function () {
     Route::get('/', [GuestController::class, 'home'])->name('home');          // /guest
@@ -90,9 +97,28 @@ Route::prefix('{tenant}')
             ->name('tenant.landing');
 
         Route::get('/dashboard', [DashboardController::class, 'index'])
-            ->name('tenant.dashboard');        
-        
+            ->name('tenant.dashboard'); 
+
+        Route::get('/tenant-admin/dashboard', [DashboardController::class, 'tenantAdminDashboard'])
+            ->name('tenant.admin.dashboard'); 
+            
+        Route::get('/subscriptions/{stripeId}', [SubscriptionManageController::class, 'show'])
+            ->name('subscriptions.show');
+
+        // Cancel at period end
+        Route::post('/subscriptions/{stripeId}/cancel', [SubscriptionManageController::class, 'cancel'])
+            ->name('subscriptions.cancel');
+
+        // Cancel immediately (optional)
+        Route::post('/subscriptions/{stripeId}/cancel-now', [SubscriptionManageController::class, 'cancelNow'])
+            ->name('subscriptions.cancelNow');      
+
     });
+
+// Landlord-level subscriptions management (not tenant-scoped)
+Route::get('/admin/subscriptions', [SubscriptionManageController::class, 'indexCentral'])
+    ->middleware(['web', 'auth'])   // Add 'verified' if you require verified emails
+    ->name('landlord.subscriptions.index');
 
 // Handle manual entry of a tenant id and redirect to /{tenant}/login
 Route::post('/tenant/switch', [TenantSwitchController::class, 'switch'])
