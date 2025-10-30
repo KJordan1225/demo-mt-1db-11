@@ -15,12 +15,9 @@ class RbacSeeder extends Seeder
     public function run(): void
     {
         // Landlord roles
-        $super = Role::firstOrCreate(['name' => 'super-admin', 'tenant_id' => null]);
-        $landAdmin = Role::firstOrCreate(['name' => 'admin', 'tenant_id' => null]);
+        $super = Role::firstOrCreate(['name' => 'super-admin', 'slug' => 'super-admin','tenant_id' => null]);
+        $landAdmin = Role::firstOrCreate(['name' => 'admin', 'slug' => 'admin', 'tenant_id' => null]);
 
-        // Landlord permission (optional)
-        $landPerm = Permission::firstOrCreate(['name' => 'manage-landlord', 'tenant_id' => null]);
-        $landAdmin->permissions()->syncWithoutDetaching([$landPerm->id]);
 
         // Give the first user super-admin (example)
         if ($owner = User::orderBy('id')->first()) {
@@ -31,14 +28,9 @@ class RbacSeeder extends Seeder
         Tenant::query()->each(function (Tenant $t) {
             $tid = method_exists($t, 'getTenantKey') ? $t->getTenantKey() : $t->id;
 
-            $tAdmin = Role::firstOrCreate(['name' => 'admin', 'tenant_id' => $tid]);
-            $tUser  = Role::firstOrCreate(['name' => 'user',  'tenant_id' => $tid]);
+            $tAdmin = Role::firstOrCreate(['name' => 'admin', 'slug' => 'admin', 'tenant_id' => $tid]);
+            $tUser  = Role::firstOrCreate(['name' => 'user',  'slug' => 'user',  'tenant_id' => $tid]);
 
-            $viewDash    = Permission::firstOrCreate(['name' => 'view-dashboard', 'tenant_id' => $tid]);
-            $manageUsers = Permission::firstOrCreate(['name' => 'manage-users',  'tenant_id' => $tid]);
-
-            $tAdmin->permissions()->syncWithoutDetaching([$viewDash->id, $manageUsers->id]);
-            $tUser->permissions()->syncWithoutDetaching([$viewDash->id]);
         });
     }
 }

@@ -16,6 +16,7 @@ use Stancl\Tenancy\Middleware\InitializeTenancyByPath;
 use Laravel\Cashier\Http\Controllers\WebhookController;
 use App\Http\Controllers\Connect\SubscriptionController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\OauthSubscriptionAccountCreateController;
 
 
 // ----- Landlord (central) -----
@@ -102,6 +103,13 @@ Route::prefix('{tenant}')
         if (file_exists(__DIR__.'/tenant_auth.php')) {
             require __DIR__.'/tenant_auth.php';
         }
+
+        // Route to create the Stripe Connect link
+        Route::get('/stripe/connect', [OauthSubscriptionAccountCreateController::class, 'createStripeConnectLink'])
+            ->name('stripe.connect');        
+        // Route to handle the Stripe callback after authorization
+        Route::get('/stripe/callback', [OauthSubscriptionAccountCreateController::class, 'handleStripeCallback'])
+            ->name('stripe.callback');
 
         // Route::get('/', fn () => redirect()->route('tenant.landing', ['tenant' => tenant('id')]))
         //     ->name('tenant.home');

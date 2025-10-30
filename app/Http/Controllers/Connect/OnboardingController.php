@@ -8,7 +8,8 @@ use Illuminate\Http\Request;
 use Stripe\Stripe;
 use Stripe\Account;
 use Stripe\AccountLink;
-use Stancl\Tenancy\Tenancy; // ⬅️ Import Tenancy class for manual initialization
+use Stancl\Tenancy\Tenancy;
+
 
 class OnboardingController extends Controller
 {
@@ -139,4 +140,10 @@ class OnboardingController extends Controller
         return redirect()->route('tenant.connect.onboarding', ['tenant' => $tenant->id])
             ->with('status', 'Please restart the onboarding process.');
     }
+
+
+
+
+
+
 }
