@@ -9,6 +9,7 @@ use App\Http\Controllers\TenantSwitchController;
 use App\Http\Controllers\LandlordPlansController;
 use App\Http\Controllers\Tenant\DashboardController;
 use App\Http\Controllers\LandlordDashboardController;
+use App\Http\Controllers\OauthStripeConnectController;
 use Stancl\Tenancy\Middleware\InitializeTenancyByPath;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Tenant\SubscriptionManageController;
@@ -90,8 +91,8 @@ Route::prefix('{tenant}')
         // Tenant-auth routes (prefixed names to avoid clashes with landlord)
         if (file_exists(__DIR__.'/tenant_auth.php')) {
             require __DIR__.'/tenant_auth.php';
-        }        
-
+        }
+        
         // routes/web.php (inside your {tenant} + web + tenant middleware group)
         Route::get('/', fn () => view('tenant.landing', ['tenant' => tenant('id')]))
             ->name('tenant.landing');
