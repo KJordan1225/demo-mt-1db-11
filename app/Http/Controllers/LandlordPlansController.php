@@ -8,9 +8,18 @@ use App\Models\Tenant;
 use App\Models\Permission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use App\Services\StripeService; // Import the StripeService
+
 
 class LandlordPlansController extends Controller
 {
+    protected $stripeService;
+
+    public function __construct(StripeService $stripeService)
+    {
+        $this->stripeService = $stripeService;
+    }
+    
     public function index()
     {
         return view('guest.plans');
@@ -48,6 +57,8 @@ class LandlordPlansController extends Controller
 
         $tenant =Tenant::create([
             'id'   => $data['id'],
+            'name' => $data['display_name'],
+            'email' => $request->email,
             'data' => [],
             'display_name' => $data['display_name'], // Adjust domain as needed
             'logo_url'      => $data['logo_url'] ?? null,
@@ -87,6 +98,15 @@ class LandlordPlansController extends Controller
 
         // Assign the roleto new user
         $user->roles()->attach($tAdmin->id, ['tenant_id' => $tenant->id ?? null]);
+
+        // Create a Stripe Connect account for this tenant (creator)
+        try {
+            $this->stripeService->createStripeConnectAccount($tenant);
+            return redirect()->route('tenant.dashboard', ['tenant' => $tenant->id])->with('success', 'Creator account successfully created!');
+        } catch (\Exception $e) {
+            return redirect()->route('tenant.dashboard', ['tenant' => $tenant->id])->with('error', 'Error creating Stripe account: ' . $e->getMessage());
+        }
+
 
         return redirect()->route('guest.home')->with('status', 'Tenant created.');
     }

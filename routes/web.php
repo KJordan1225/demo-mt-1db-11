@@ -116,6 +116,9 @@ Route::prefix('{tenant}')
 
     });
 
+Route::get('/dashboard2', [DashboardController::class, 'index2'])
+            ->name('tenant.dashboard2');
+
 // Landlord-level subscriptions management (not tenant-scoped)
 Route::get('/admin/subscriptions', [SubscriptionManageController::class, 'indexCentral'])
     ->middleware(['web', 'auth'])   // Add 'verified' if you require verified emails

@@ -17,6 +17,11 @@ class DashboardController extends Controller
         return view('dashboard');
     }
 
+    public function index2(Request $request)
+    {
+       return view('dashboard');
+    }
+
     public function tenantAdminDashboard()
     {
         $pendingRequests = 0;
