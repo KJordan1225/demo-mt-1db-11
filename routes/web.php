@@ -13,6 +13,8 @@ use App\Http\Controllers\OauthStripeConnectController;
 use Stancl\Tenancy\Middleware\InitializeTenancyByPath;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Tenant\SubscriptionManageController;
+use App\Http\Controllers\CreatorPricingController;
+use App\Http\Controllers\CreatorSubscriptionController;
 
 
 // ----- Landlord (central) -----
@@ -92,6 +94,17 @@ Route::prefix('{tenant}')
         if (file_exists(__DIR__.'/tenant_auth.php')) {
             require __DIR__.'/tenant_auth.php';
         }
+
+        Route::post('/subscribe', [CreatorSubscriptionController::class, 'createSubscription'])
+            ->name('subscription.create'); // DIFFERENCE
+        Route::get('/subscription/success', [CreatorSubscriptionController::class, 'handleCheckoutSession'])
+            ->name('subscription.success'); // DIFFERENCE
+        Route::get('/subscription/cancel', [CreatorSubscriptionController::class, 'cancelSubscription'])
+            ->name('subscription.cancel'); // DIFFERENCE
+
+
+        Route::post('/creator/pricing', [CreatorPricingController::class, 'update'])
+            ->name('creator.pricing.update'); // DIFFERENCE
         
         // routes/web.php (inside your {tenant} + web + tenant middleware group)
         Route::get('/', fn () => view('tenant.landing', ['tenant' => tenant('id')]))
