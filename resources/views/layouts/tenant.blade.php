@@ -62,6 +62,23 @@
                     <span class="navbar-text tenant-badge text-white-50">
                         Tenant: <strong>{{ $branding['slug'] }}</strong>
                     </span>
+                    @auth
+                    {{-- Tenant badge --}}
+                    <span class="text-white-50 small d-none d-sm-inline">
+                        Logged in: <strong>{{ auth()->user()->name }}</strong>
+                    </span>
+                    <form method="POST" action="{{ route('landlord.logout') }}" class="m-0">
+                        @csrf
+                        <button class="btn btn-sm btn-light" type="submit">Log out</button>
+                    </form>
+                    @else
+                    <span class="text-white-50 small d-none d-sm-inline">
+                        Not Logged In
+                    </span> 
+                    <a href="{{ route('landlord.login') }}" class="btn btn-primary btn-sm">
+                        Login
+                    </a>                   
+                    @endauth
                 </div>
             </div>
         </nav>

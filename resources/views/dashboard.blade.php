@@ -38,8 +38,9 @@
     {{-- Main content --}}
     <div class="row">
         <div class="col-12">
-            <div class="card shadow-sm">
+            <div class="card shadow-sm">                
                 <div class="card-body text-muted">
+                    @if (tenant('id'))
                     <form method="POST" action="{{ route('creator.pricing.update', ['tenant' => tenant('id')]) }}" class="space-y-4">
                         @csrf
                         <div>
@@ -68,7 +69,9 @@
                         </div>
                         <button class="px-4 py-2 rounded bg-indigo-600 text-white">Save Pricing</button>
                     </form>
-
+                    @else
+                        You're logged in!
+                    @endif
                 </div>
             </div>
         </div>

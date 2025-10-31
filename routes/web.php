@@ -110,6 +110,9 @@ Route::prefix('{tenant}')
         Route::get('/', fn () => view('tenant.landing', ['tenant' => tenant('id')]))
             ->name('tenant.landing');
 
+        Route::get('/user-dashboard', fn () => view('tenant.user_dashboard', ['tenant' => tenant('id')]))
+            ->name('tenant.user-dashboard');
+
         Route::get('/dashboard', [DashboardController::class, 'index'])
             ->name('tenant.dashboard'); 
 

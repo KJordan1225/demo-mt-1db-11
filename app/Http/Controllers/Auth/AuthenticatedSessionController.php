@@ -73,7 +73,7 @@ class AuthenticatedSessionController extends Controller
 
         // 3) Regular tenant user
         if ($isTenant) {
-            return redirect()->intended(route('tenant.landing', ['tenant' => $tenantId]));
+            return redirect()->intended(route('tenant.user-dashboard', ['tenant' => $tenantId]));
         }
 
         // 4) Fallback: central guest
