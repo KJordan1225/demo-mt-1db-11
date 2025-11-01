@@ -10,7 +10,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Cookie;
-use Stancl\Tenancy\Tenancy;
+use Stancl\Tenancy\Tenancy;  // Import the Auth facade
+use App\Models\User;
 
 
 class AuthenticatedSessionController extends Controller
@@ -63,17 +64,22 @@ class AuthenticatedSessionController extends Controller
         $tenantId = $isTenant ? tenant('id') : null;
         // 1) Landlord-level super admin?
         if ($user->hasRole('super-admin', null)) {
-            // dd('Redirecting super-admin to landlord dashboard');
-           return redirect()->intended(route('landlord.dashboard.index')); // adjust to your landlord route name
+            
+           return redirect()->intended(route('landlord.dashboard.index')); 
+            
         }
         // 2) Tenant admin?
         if ($isTenant && $user->hasRole('admin', $tenantId)) {
+            
             return redirect()->intended(route('tenant.admin.dashboard', ['tenant' => $tenantId]));
+            
         }
 
         // 3) Regular tenant user
         if ($isTenant) {
+            
             return redirect()->intended(route('tenant.user-dashboard', ['tenant' => $tenantId]));
+            
         }
 
         // 4) Fallback: central guest

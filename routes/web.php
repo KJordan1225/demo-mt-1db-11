@@ -7,14 +7,15 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TenantSwitchController;
 use App\Http\Controllers\LandlordPlansController;
+use App\Http\Controllers\CreatorPricingController;
 use App\Http\Controllers\Tenant\DashboardController;
+use App\Http\Controllers\UserSubscriptionController;
 use App\Http\Controllers\LandlordDashboardController;
 use App\Http\Controllers\OauthStripeConnectController;
 use Stancl\Tenancy\Middleware\InitializeTenancyByPath;
+use App\Http\Controllers\CreatorSubscriptionController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Tenant\SubscriptionManageController;
-use App\Http\Controllers\CreatorPricingController;
-use App\Http\Controllers\CreatorSubscriptionController;
 
 
 // ----- Landlord (central) -----
@@ -94,6 +95,17 @@ Route::prefix('{tenant}')
         if (file_exists(__DIR__.'/tenant_auth.php')) {
             require __DIR__.'/tenant_auth.php';
         }
+
+        // Route to create a subscription to a creator
+        Route::post('/usersubscribe', [UserSubscriptionController::class, 'createSubscription'])
+            ->name('usersubscription.create');
+        // Stripe checkout session success callback
+        Route::get('/usersubscription/success', [UserSubscriptionController::class, 'handleCheckoutSession'])
+            ->name('usersubscription.success');
+        // Cancel subscription
+        Route::get('/usersubscription/cancel', [UserSubscriptionController::class, 'cancelSubscription'])
+            ->name('usersubscription.cancel');
+
 
         Route::post('/subscribe', [CreatorSubscriptionController::class, 'createSubscription'])
             ->name('subscription.create'); // DIFFERENCE
