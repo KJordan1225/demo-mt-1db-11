@@ -29,29 +29,12 @@ class UserSubscriptionController extends Controller
         Stripe::setApiKey(env('STRIPE_SECRET'));
         // Create the Stripe Checkout session for the subscription
         try {
-
-            $product = \Stripe\Product::create([
-                'name' => 'Example Product',  // Name of the product
-                'description' => 'This is an example product created via the API.',  // Product description
-                'type' =>  'service' // (depends on the type of product you're selling)
-            ]);
-
-            $productId = $product->id;
-            $price = \Stripe\Price::create([
-                'product' => $productId,
-                'unit_amount' => 1000, // Example: $10
-                'currency' => 'usd',
-                'recurring' => [
-                    'interval' => 'month', // Set as monthly or yearly subscription
-                ],
-            ]);
-
-            // $priceId = $tenant->stripe_price_id;
+            $priceId = $tenant->stripe_price_id;
             $session = StripeSession::create([
                 'payment_method_types' => ['card'],
                 'line_items' => [
                     [
-                        'price' => $price->id,  // Use the existing price ID associated with the tenant's subscription
+                        'price' => $priceId,  // Use the existing price ID associated with the tenant's subscription
                         'quantity' => 1,
                     ],
                 ],

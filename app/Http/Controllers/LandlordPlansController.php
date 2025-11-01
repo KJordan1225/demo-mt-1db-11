@@ -9,6 +9,10 @@ use App\Models\Permission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Services\StripeService; // Import the StripeService
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Auth\Events\Registered;
+use Stripe\StripeClient;
+
 
 
 class LandlordPlansController extends Controller
@@ -98,6 +102,35 @@ class LandlordPlansController extends Controller
 
         // Assign the roleto new user
         $user->roles()->attach($tAdmin->id, ['tenant_id' => $tenant->id ?? null]);
+
+        // Login user
+        Auth::login($user);                     // or Auth::guard('web')->login($user);
+        $request->session()->regenerate();      // protect against session fixation
+
+        $stripe = new StripeClient(config('services.stripe.secret'));
+
+        // 2a) Create account once and persist ID
+        if (! $tenant->stripe_account_id) {
+            $acct = $stripe->accounts->create([
+                'type' => 'express', // or 'standard' if that’s your model
+                'metadata' => [
+                    'tenant_id' => $tenant->id,
+                    'tenant_name' => $tenant->name,
+                ],
+            ]);
+            $tenant->stripe_account_id = $acct->id;
+            $tenant->save();
+        }
+      
+        // 2b) Generate onboarding link for the UI
+        $link = $stripe->accountLinks->create([
+            'account'     => $tenant->stripe_account_id,
+            'refresh_url' => route('stripe.connect.refresh', ['tenant' => $tenant->id]),
+            'return_url'  => route('stripe.connect.return', ['tenant' => $tenant->id]),
+            'type'        => 'account_onboarding',
+        ]);
+
+        return redirect()->away($link->url);
 
         // Create a Stripe Connect account for this tenant (creator)
         try {

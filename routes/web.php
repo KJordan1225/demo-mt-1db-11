@@ -7,6 +7,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TenantSwitchController;
 use App\Http\Controllers\LandlordPlansController;
+use App\Http\Controllers\StripeConnectController;
 use App\Http\Controllers\CreatorPricingController;
 use App\Http\Controllers\Tenant\DashboardController;
 use App\Http\Controllers\UserSubscriptionController;
@@ -95,6 +96,12 @@ Route::prefix('{tenant}')
         if (file_exists(__DIR__.'/tenant_auth.php')) {
             require __DIR__.'/tenant_auth.php';
         }
+
+        Route::get('/stripe/connect/return',  [StripeConnectController::class, 'return'])
+            ->name('stripe.connect.return');
+        Route::get('/stripe/connect/refresh', [StripeConnectController::class, 'refresh'])
+            ->name('stripe.connect.refresh');
+
 
         // Route to create a subscription to a creator
         Route::post('/usersubscribe', [UserSubscriptionController::class, 'createSubscription'])
