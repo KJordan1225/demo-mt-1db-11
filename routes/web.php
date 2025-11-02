@@ -8,15 +8,20 @@ use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TenantSwitchController;
 use App\Http\Controllers\LandlordPlansController;
 use App\Http\Controllers\StripeConnectController;
+use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\CreatorPricingController;
 use App\Http\Controllers\Tenant\DashboardController;
 use App\Http\Controllers\UserSubscriptionController;
 use App\Http\Controllers\LandlordDashboardController;
+use App\Http\Controllers\LandlordSubscribeController;
 use App\Http\Controllers\OauthStripeConnectController;
 use Stancl\Tenancy\Middleware\InitializeTenancyByPath;
 use App\Http\Controllers\CreatorSubscriptionController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Tenant\SubscriptionManageController;
+use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
+use App\Http\Controllers\Auth\TenantAuthController;
+
 
 
 // ----- Landlord (central) -----
@@ -97,6 +102,18 @@ Route::prefix('{tenant}')
             require __DIR__.'/tenant_auth.php';
         }
 
+        Route::get('/subscribe-landlord', [LandlordSubscribeController::class, 'showForm'])
+            ->name('landlord.subscribe.form');
+
+        Route::post('/subscribe-landlord', [LandlordSubscribeController::class, 'startCheckout'])
+            ->name('landlord.subscribe.start');
+
+        Route::get('/subscribe/success', [LandlordSubscribeController::class, 'success'])
+            ->name('landlord.subscribe.success');
+
+        Route::get('/subscribe/cancel', [LandlordSubscribeController::class, 'cancel'])
+            ->name('landlord.subscribe.cancel');
+
         Route::get('/stripe/connect/return',  [StripeConnectController::class, 'return'])
             ->name('stripe.connect.return');
         Route::get('/stripe/connect/refresh', [StripeConnectController::class, 'refresh'])
@@ -151,6 +168,14 @@ Route::prefix('{tenant}')
 
     });
 
+
+Route::prefix('{tenant}')
+    ->middleware(['web', InitializeTenancyByPath::class, PreventAccessFromCentralDomains::class, 'auth', 'verified'])
+    ->group(function () {
+        
+    });
+
+
 Route::get('/dashboard2', [DashboardController::class, 'index2'])
             ->name('tenant.dashboard2');
 
@@ -176,6 +201,11 @@ Route::middleware(['web','ctx.tenant'])->group(function () {
         return 'Landlord area';
     })->name('landlord.home');
 });
+
+// Webhook (landlord domain; do NOT put this under tenant prefix)
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle'])
+    ->name('stripe.webhook');
+
 
 
 

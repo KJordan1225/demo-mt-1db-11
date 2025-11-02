@@ -36,7 +36,11 @@ return [
     */
 
     'guards' => [
-        'web' => [
+        'web' => [ // landlord
+            'driver' => 'session',
+            'provider' => 'users',
+        ],
+        'tenant' => [ // tenant-scoped UI
             'driver' => 'session',
             'provider' => 'users',
         ],

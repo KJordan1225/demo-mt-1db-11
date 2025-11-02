@@ -226,6 +226,8 @@
                            class="btn btn-outline-primary">Choose a Plan</a>
                         <a href="{{ route('guest.create.microsite') }}"
                            class="btn btn-outline-primary">Establish Your Micro-site</a>
+                        <a href="{{ route('landlord.subscribe.form', ['tenant' => 'mmm']) }}"
+                           class="btn btn-outline-primary">TEST-Onboard Creator</a>
                     </div>
 
                     <hr class="my-4">

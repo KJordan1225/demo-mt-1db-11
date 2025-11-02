@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Cookie;
 use Stancl\Tenancy\Tenancy;  // Import the Auth facade
 use App\Models\User;
+use Illuminate\Validation\ValidationException;
 
 
 class AuthenticatedSessionController extends Controller
@@ -34,6 +35,25 @@ class AuthenticatedSessionController extends Controller
 
         $user = $request->user();
 
+        // 1) Ensure the guard you expect
+        Auth::shouldUse('tenant'); // or 'web' if you use a single guard
+
+        // 2) Tenancy should already be initialized by middleware
+        $tenantId = tenant('id') ?? $request->route('tenant'); // safe fallback
+
+        // 3) Scope credentials to the tenant if you're on single-DB multi-tenancy
+        $credentials = $request->only('email', 'password');
+        if ($tenantId) {
+            $credentials['tenant_id'] = $tenantId; // IMPORTANT for single-db setups
+        }
+
+        // 4) Attempt login on the chosen guard
+        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
+            throw ValidationException::withMessages([
+                'email' => __('auth.failed'),
+            ]);
+        }
+        
         // Detect (or gently initialize) tenant context
         /** @var Tenancy $tenancy */
         $tenancy  = app(Tenancy::class);
