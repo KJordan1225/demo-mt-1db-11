@@ -60,6 +60,14 @@ return [
             'report' => false,
         ],
 
+        'tenant_public' => [
+            'driver' => 'local',
+            'root' => storage_path('app/tenants/' . (function_exists('tenant') && tenant() ? tenant('id') : 'central') . '/public'),
+            'url' => env('APP_URL') . '/storage/tenants/' . (function_exists('tenant') && tenant() ? tenant('id') : 'central'),
+            'visibility' => 'public',
+        ],
+
+
     ],
 
     /*
@@ -75,6 +83,8 @@ return [
 
     'links' => [
         public_path('storage') => storage_path('app/public'),
-    ],
+        public_path('storage/tenants') => storage_path('app/tenants'),
+    ], 
+
 
 ];

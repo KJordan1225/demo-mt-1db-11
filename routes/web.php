@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PostController;
 use App\Http\Controllers\GuestController;
 use App\Http\Controllers\TenantController;
 use App\Http\Controllers\ProfileController;
@@ -92,6 +93,12 @@ Route::prefix('{tenant}')
             require __DIR__.'/tenant_auth.php';
         }        
 
+        Route::get('/postsIndex', [PostController::class, 'index'])
+            ->name('tenant.posts.index');
+        Route::get('/postImageUpload', [PostController::class, 'create'])
+            ->name('tenant.post.image.upload');
+        Route::post('/postImageUpload', [PostController::class, 'store'])
+            ->name('tenant.posts.store');
         // routes/web.php (inside your {tenant} + web + tenant middleware group)
         Route::get('/', fn () => view('tenant.landing', ['tenant' => tenant('id')]))
             ->name('tenant.landing');

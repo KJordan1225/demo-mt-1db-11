@@ -1,254 +1,185 @@
+
+
+{{-- resources/views/tenant/landing.blade.php --}}
+@extends('layouts.tenant')
+
+@section('title', ($branding['display_name'] ?? 'Welcome').' · Landing')
+
+@section('content')
+<style>
+  /* Center the card and control carousel sizing */
+  .landing-wrap {
+    min-height: calc(100vh - 4rem);
+  }
+  .carousel-fixed {
+    width: 100%;
+    aspect-ratio: 1 / 1;        /* mobile: square & responsive */
+    overflow: hidden;
+    border-radius: .5rem;
+    background: #000;
+  }
+  @media (min-width: 768px) {   /* md and up: fixed 464x464 */
+    .carousel-fixed {
+      width: 464px;
+      height: 464px;
+      aspect-ratio: auto;
+    }
+  }
+  .carousel-fixed img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;           /* fill frame nicely */
+  }
+</style>
 @php
-    // Assumes $branding is shared (display_name, slug, branding colors)
+    // Assumes $branding is shared (display_name, slug, colors)
     $title = $branding['display_name'] . ' · Welcome';
 
     use Illuminate\Support\Facades\File;
+    use Spatie\MediaLibrary\MediaCollections\Models\Media;
+    use App\Models\Post;
 
-    // Read images from public/images/carousel
+    // ---- 1) Spatie Media Library images (collection: 'carousel_samples' on Post) ----
+    $tenantId = function_exists('tenant') ? tenant('id') : null;
+
+    $libraryImages = Media::query()
+        ->where('collection_name', 'carousel_samples')
+        ->where('model_type', Post::class)
+        ->when($tenantId, function ($q) use ($tenantId) {
+            // Join to tenant-scoped posts so we only get this tenant's media
+            $q->join('posts', 'media.model_id', '=', 'posts.id')
+              ->where('posts.tenant_id', $tenantId)
+              ->select('media.*'); // keep Media columns after join
+        })
+        ->orderBy('order_column') // uses Spatie's order if set
+        ->get()
+        ->map(function (Media $m) {
+            // Prefer a web-friendly conversion if you have one; else original
+            // return $m->getUrl('web') ?: $m->getUrl();
+            return $m->getUrl();
+        });
+
+    dd($libraryImages);
+
+    // ---- 2) Public folder images (fallback / additive) ----
     $dir = public_path('images/carousel');
-    $images = is_dir($dir)
-        ? collect(File::files($dir))
-            ->filter(fn($f) => in_array(strtolower($f->getExtension()), ['jpg','jpeg','png','gif','webp']))
-            ->sortBy(fn($f) => $f->getFilename()) // stable order
-            ->map(fn($f) => asset('images/carousel/'.$f->getFilename()))
-            ->values()
-        : collect();
+    $fileImages = collect();
+
+    // ---- 3) Merge (Media first), de-duplicate, reindex ----
+    $images = $libraryImages
+        ->merge($fileImages)
+        ->unique()
+        ->values();
 @endphp
 
-<!doctype html>
-<html lang="en" class="h-100">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $title }}</title>
+<div class="container landing-wrap d-flex flex-column justify-content-center py-5">
+  {{-- Carousel Card --}}
+  <div class="row justify-content-center mb-4">
+    <div class="col-12 d-flex justify-content-center">
+      <div class="card shadow-sm" style="max-width: 520px; width:100%;">
+        <div class="card-body d-flex justify-content-center">
+          <div id="landingCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3000" aria-label="Hero image carousel">
+            {{-- Indicators (dots) --}}
+            @if(!empty($images) && count($images) > 1)
+              <div class="carousel-indicators" style="bottom:-2.25rem;">
+                @foreach($images as $i => $src)
+                  <button type="button"
+                          data-bs-target="#landingCarousel"
+                          data-bs-slide-to="{{ $i }}"
+                          @if($i===0) class="active" aria-current="true" @endif
+                          aria-label="Slide {{ $i+1 }}"></button>
+                @endforeach
+              </div>
+            @endif
 
-    {{-- Bootstrap 5 --}}
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <style>
-        :root{
-            --brand-primary: {{ $branding['primary_color'] }};
-            --brand-accent:  {{ $branding['accent_color'] }};
-            --brand-bg:      {{ $branding['bg_color'] }};
-            --brand-text:    {{ $branding['text_color'] }};
-        }
-        body { background: #f8f9fa; }
-
-        .brand-pane { background:#000; color:var(--brand-bg); }
-        .brand-title { letter-spacing:.5px; }
-
-        .auth-card { max-width: 460px; width: 100%; }
-        .btn-brand { background: var(--brand-primary); color: #fff; }
-        .btn-brand:hover { filter: brightness(.95); color: #fff; }
-        .link-brand { color: var(--brand-primary) !important; text-decoration: none; }
-        .link-brand:hover { text-decoration: underline; }
-        .muted-text { color: var(--brand-bg) !important; }
-
-        /* === Responsive Carousel ===
-           - Uses aspect-ratio so images scale with width
-           - No fixed width/height; fills container
-        */
-        .carousel-frame {
-            position: relative;
-            width: 100%;
-            aspect-ratio: 1 / 1; /* square on very small screens */
-            overflow: hidden;
-            background: #000;
-            border-radius: .75rem;
-        }
-        @media (min-width: 576px) { .carousel-frame { aspect-ratio: 4 / 3; } }
-        @media (min-width: 768px) { .carousel-frame { aspect-ratio: 16 / 9; } }
-        /* On lg+ in the left pane, give it a nice presence */
-        @media (min-width: 992px) { .carousel-frame { max-width: 620px; } }
-        @media (min-width: 1200px) { .carousel-frame { max-width: 720px; } }
-
-        .slide {
-            position: absolute; inset: 0;
-            opacity: 0; transition: opacity .6s ease-in-out;
-            display: flex;
-        }
-        .slide.active { opacity: 1; }
-        .slide img {
-            width: 100%; height: 100%;
-            object-fit: cover; /* fills frame nicely */
-        }
-        .dots {
-            position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%);
-            display: flex; gap: 8px; z-index: 2;
-        }
-        .dot {
-            width: 10px; height: 10px; border-radius: 9999px;
-            background: rgba(255,255,255,.55);
-        }
-        .dot.active { background: #fff; }
-    </style>
-</head>
-<body class="min-vh-100 d-flex">
-
-    <div class="container-fluid g-0 flex-fill">
-        <div class="row g-0 min-vh-100">
-
-            {{-- MOBILE HEADER + CAROUSEL (visible on < lg) --}}
-            <div class="col-12 d-lg-none py-4 px-3">
-                <div class="text-center mb-3">
-                    @if(($branding['logo_url'] ?? null))
-                        <img src="{{ $branding['logo_url'] }}" alt="Logo"
-                             class="mb-2" style="height:48px;width:48px;object-fit:cover;border-radius:.5rem;">
-                    @endif
-                    <h1 class="h4 fw-semibold m-0">{{ $branding['display_name'] }}</h1>
-                    <div class="text-muted small">Tenant: <code>{{ $branding['slug'] }}</code></div>
+            {{-- Slides --}}
+            <div class="carousel-inner">
+              @forelse($images ?? [] as $i => $src)
+                <div class="carousel-item @if($i===0) active @endif">
+                  <div class="carousel-fixed">
+                    <img src="{{ $src }}" alt="Slide {{ $i+1 }}">
+                  </div>
                 </div>
-
-                @if($images->isNotEmpty())
-                    <div id="rotator-mobile" class="carousel-frame mx-auto">
-                        @foreach($images as $i => $src)
-                            <div class="slide {{ $i === 0 ? 'active' : '' }}">
-                                <img src="{{ $src }}" alt="slide {{ $i+1 }}" loading="lazy" />
-                            </div>
-                        @endforeach
-                        <div class="dots">
-                            @foreach($images as $i => $src)
-                                <div class="dot {{ $i === 0 ? 'active' : '' }}"></div>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
+              @empty
+                <div class="carousel-item active">
+                  <div class="carousel-fixed d-flex align-items-center justify-content-center text-white-50">
+                    <span class="small">No images available</span>
+                  </div>
+                </div>
+              @endforelse
             </div>
 
-            {{-- LEFT PANE (large screens) --}}
-            <div class="col-lg-6 d-none d-lg-flex brand-pane align-items-center justify-content-center">
-                <div class="text-center px-4">
-                    @if($images->isNotEmpty())
-                        <div id="rotator" class="carousel-frame mx-auto mb-4">
-                            @foreach($images as $i => $src)
-                                <div class="slide {{ $i === 0 ? 'active' : '' }}">
-                                    <img src="{{ $src }}" alt="slide {{ $i+1 }}" loading="lazy" />
-                                </div>
-                            @endforeach
-                            <div class="dots">
-                                @foreach($images as $i => $src)
-                                    <div class="dot {{ $i === 0 ? 'active' : '' }}"></div>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
-
-                    <h1 class="display-6 fw-semibold brand-title mb-2">
-                        {{ $branding['display_name'] }}
-                    </h1>
-                    <div class="text-muted muted-text">
-                        Tenant: <code>{{ $branding['slug'] }}</code>
-                    </div>
-                </div>
-            </div>
-
-            {{-- RIGHT PANE (form; full-width on mobile) --}}
-            <div class="col-12 col-lg-6 d-flex align-items-center justify-content-center py-5 px-3 px-md-4">
-                <div class="auth-card w-100">
-                    <div class="card shadow-sm">
-                        <div class="card-body p-4 p-md-5">
-                            <h3 class="h5 fw-semibold mb-3 text-center">Sign in</h3>
-
-                            <form method="POST" action="{{ route('login', ['tenant' => $branding['slug']]) }}" novalidate>
-                                @csrf
-
-                                {{-- Email --}}
-                                <div class="mb-3">
-                                    <label for="email" class="form-label">Email address</label>
-                                    <input id="email" type="email" name="email"
-                                           class="form-control @error('email') is-invalid @enderror"
-                                           value="{{ old('email') }}" required autofocus autocomplete="username">
-                                    @error('email')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                {{-- Password --}}
-                                <div class="mb-3">
-                                    <label for="password" class="form-label">Password</label>
-                                    <input id="password" type="password" name="password"
-                                           class="form-control @error('password') is-invalid @enderror"
-                                           required autocomplete="current-password">
-                                    @error('password')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                {{-- Remember + Forgot --}}
-                                <div class="d-flex justify-content-between align-items-center mb-4">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="remember" id="remember">
-                                        <label class="form-check-label" for="remember">Remember me</label>
-                                    </div>
-                                    @if (Route::has('password.request'))
-                                        <a class="small link-brand"
-                                           href="{{ route('password.request', ['tenant' => $branding['slug']]) }}">
-                                            Forgot password?
-                                        </a>
-                                    @endif
-                                </div>
-
-                                <button type="submit" class="btn btn-brand w-100">
-                                    Log in
-                                </button>
-                            </form>
-
-                            @if (Route::has('tenant.register'))
-                                <div class="text-center mt-3">
-                                    <span class="small text-muted">New here?</span>
-                                    <a class="small ms-1 link-brand"
-                                       href="{{ route('tenant.register', ['tenant' => $branding['slug']]) }}">
-                                        Create an account
-                                    </a>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-
-                    <div class="text-center mt-4 small text-muted">
-                        &copy; {{ date('Y') }} {{ $branding['display_name'] }}
-                    </div>
-                </div>
-            </div>
+            {{-- Controls (optional) --}}
+            @if(!empty($images) && count($images) > 1)
+              <button class="carousel-control-prev" type="button" data-bs-target="#landingCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+              </button>
+              <button class="carousel-control-next" type="button" data-bs-target="#landingCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+              </button>
+            @endif
+          </div>
         </div>
+      </div>
     </div>
+  </div>
 
-    {{-- Minimal rotator JS (reused for desktop & mobile instances) --}}
-    <script>
-        (function initRotator(id) {
-            const root = document.getElementById(id);
-            if (!root) return;
-            const slides = root.querySelectorAll('.slide');
-            const dots   = root.querySelectorAll('.dot');
-            if (!slides.length) return;
+  {{-- Subscription Info Card --}}
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-10 col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-body p-4 p-md-5">
+          <h2 class="h4 mb-3 text-center">
+            Subscribe to {{ $branding['display_name'] ?? 'our micro-site' }}
+          </h2>
+          <p class="text-muted mb-4 text-center">
+            Get exclusive updates, behind-the-scenes content, early access to drops, and members-only perks.
+            Your subscription helps support ongoing content and special events delivered directly to you.
+          </p>
 
-            let i = 0, delay = 3000;
+          <div class="row g-3 justify-content-center mb-3">
+            <div class="col-12 col-sm-6 col-lg-4">
+              <div class="d-flex align-items-start">
+                <div class="me-2">✅</div>
+                <div>
+                  <strong>Members-only posts</strong><br>
+                  <span class="text-muted small">Private galleries and premium content.</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-4">
+              <div class="d-flex align-items-start">
+                <div class="me-2">⚡</div>
+                <div>
+                  <strong>Early access</strong><br>
+                  <span class="text-muted small">Be first to see new releases.</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-4">
+              <div class="d-flex align-items-start">
+                <div class="me-2">🎁</div>
+                <div>
+                  <strong>Special perks</strong><br>
+                  <span class="text-muted small">Discounts, shout-outs, and more.</span>
+                </div>
+              </div>
+            </div>
+          </div>
 
-            function go(next) {
-                slides[i].classList.remove('active');
-                dots[i]?.classList.remove('active');
-                i = next;
-                slides[i].classList.add('active');
-                dots[i]?.classList.add('active');
-            }
-
-            setInterval(() => go((i + 1) % slides.length), delay);
-        })('rotator');
-
-        (function initMobile() {
-            const el = document.getElementById('rotator-mobile');
-            if (!el) return;
-            // clone rotator logic for mobile instance
-            const slides = el.querySelectorAll('.slide');
-            const dots   = el.querySelectorAll('.dot');
-            if (!slides.length) return;
-            let i = 0, delay = 3000;
-            function go(n){ slides[i].classList.remove('active'); dots[i]?.classList.remove('active'); i=n; slides[i].classList.add('active'); dots[i]?.classList.add('active'); }
-            setInterval(() => go((i+1)%slides.length), delay);
-        })();
-    </script>
-
-    {{-- Bootstrap JS --}}
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+          <div class="text-center">
+            <a href="#"
+               class="btn btn-primary btn-lg px-4">
+              Subscribe Now
+            </a>
+            {{-- If you have a route: --}}
+            {{-- <a href="{{ route('tenant.subscribe', ['tenant' => tenant('id')]) }}" class="btn btn-primary btn-lg px-4">Subscribe Now</a> --}}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+@endsection
