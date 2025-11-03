@@ -53,7 +53,7 @@
             <div class="col-lg-6 d-none d-lg-flex brand-pane align-items-center justify-content-center">
                 <div class="text-center px-4">
                     @if(($branding['logo_url'] ?? null))
-                        <img src="{{ $branding['logo_url'] }}" alt="Logo"
+                        <img src="{{ asset('images/landlord-login-img1.png') }}" alt="Login Logo"
                              class="mb-4" style="height:64px;width:64px;object-fit:cover;border-radius:.75rem;">
                     @endif
 

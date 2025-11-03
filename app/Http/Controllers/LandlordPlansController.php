@@ -41,9 +41,7 @@ class LandlordPlansController extends Controller
             ],
             'password'       => ['required', 'string', 'min:8', 'confirmed'], // Confirmed automatically checks password_confirmation field
             'password_confirmation' => ['required', 'string', 'min:8'], // Ensure password confirmation matches
-
-            // New validation rule for name field
-            'name' => ['required', 'string', 'max:255'],  // Name is required, should be a string, and have a maximum length of 255 characters
+        
         ]);
 
         $tenant =Tenant::create([
@@ -80,7 +78,7 @@ class LandlordPlansController extends Controller
         // 3) Register the user within the tenant
         // Create the user
         $user = User::create([
-            'name' => $request->name,
+            'name' => $data['display_name'],
             'email' => $request->email,
             'password' => Hash::make($request->password), // Hash the password
         ]);

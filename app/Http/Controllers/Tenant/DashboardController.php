@@ -2,8 +2,13 @@
 
 namespace App\Http\Controllers\Tenant;
 
+
+use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use Stancl\Tenancy\Facades\Tenancy;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -17,14 +22,27 @@ class DashboardController extends Controller
         return view('dashboard');
     }
 
-    public function tenantAdminDashboard()
+    public function tenantAdminDashboard(Request $request)
     {
+        
         $pendingRequests = 0;
         $newSignups = 0;
         $activeSubscriptions = 0;
         $userCount = 0;
         $subscriptions = [];
         $notifications = [];
+
+        $firstSegment = request()->segment(1);
+        tenancy()->initialize($firstSegment); 
+        // if (tenancy()->initialized) {
+        //     dump([
+        //         'initialized' => tenancy()->initialized,
+        //         'tenant_id'   => tenant('id'),   // null if not initialized
+        //     ]);
+        // }
+        $userId = $request->session()->get('user_id');
+        // $user = User::find($userId); 
+        $user = User::withoutGlobalScopes()->find($userId);
         
         return view('tenant.admin.dashboard', 
             compact('pendingRequests', 
@@ -32,7 +50,8 @@ class DashboardController extends Controller
                     'activeSubscriptions',
                     'userCount',
                     'subscriptions',
-                    'notifications'));
+                    'notifications',
+                    'user'));
     }
 }   
 

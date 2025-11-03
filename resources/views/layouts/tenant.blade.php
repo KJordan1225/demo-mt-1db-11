@@ -1,9 +1,31 @@
 @php
+    use Stancl\Tenancy\Tenancy;
+    use App\Models\Tenant;
     // $branding is shared by your provider
     $pageTitle = trim($__env->yieldContent('title'));
     $title = $pageTitle
         ? $pageTitle . ' · ' . $branding['display_name']
         : $branding['display_name'] . ' · Dashboard';
+    
+    $tenancy = app(Tenancy::class);
+
+    // Already running?
+    if (function_exists('tenant') && tenant()) {
+        // Tenancy is initialized
+        $tenantId = tenant('id');
+    } else {
+        // Try to initialize from route param (path-based tenancy)
+        $tenantKey = request()->route('tenant'); // e.g. 'alpha'
+        if ($tenantKey) {
+            // You can pass the id string directly OR the Tenant model instance:
+            // $tenancy->initialize($tenantKey); // works if your key is the tenant id
+            $tenant = Tenant::find($tenantKey) ?? Tenant::where('id', $tenantKey)->first();
+            if ($tenant) {
+                $tenancy->initialize($tenant);
+                $tenantId = tenant('id'); // now available
+            }
+        }
+    }
 @endphp
 
 <!doctype html>

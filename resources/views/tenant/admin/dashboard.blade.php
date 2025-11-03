@@ -1,7 +1,7 @@
 @extends('layouts.landlord')
 
 @section('content')
-<div class="container-fluid">
+<div class="container-fluid">    
     <div class="row">
         <!-- Sidebar -->
         <div class="col-md-3 col-lg-2 d-none d-md-block bg-light sidebar">
