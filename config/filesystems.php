@@ -63,7 +63,7 @@ return [
         'tenant_public' => [
             'driver' => 'local',
             'root' => storage_path('app/tenants/' . (function_exists('tenant') && tenant() ? tenant('id') : 'central') . '/public'),
-            'url' => env('APP_URL') . '/storage/tenants/' . (function_exists('tenant') && tenant() ? tenant('id') : 'central'),
+            'url' => env('APP_URL') . '/storage/tenants/' . (function_exists('tenant') && tenant() ? tenant('id') : 'central' . '/public'),
             'visibility' => 'public',
         ],
 

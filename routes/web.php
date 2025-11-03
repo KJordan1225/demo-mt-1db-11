@@ -13,6 +13,9 @@ use App\Http\Controllers\LandlordDashboardController;
 use Stancl\Tenancy\Middleware\InitializeTenancyByPath;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Tenant\SubscriptionManageController;
+use App\Http\Controllers\Central\CreatorOnboardingController;
+use App\Http\Controllers\Tenant\UserSubscriptionController;
+use App\Models\Post;
 
 
 // ----- Landlord (central) -----
@@ -83,6 +86,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 });
 
+Route::pattern('tenant', '[A-Za-z0-9_-]+');
 
 // ----- Tenant -----
 Route::prefix('{tenant}')
@@ -91,7 +95,22 @@ Route::prefix('{tenant}')
         // Tenant-auth routes (prefixed names to avoid clashes with landlord)
         if (file_exists(__DIR__.'/tenant_auth.php')) {
             require __DIR__.'/tenant_auth.php';
-        }        
+        }  
+        
+        // Bind {post} so it must belong to the active tenant; supports ID or slug
+        Route::bind('post', function ($value) {
+            return Post::query()
+                ->where('tenant_id', tenant('id'))
+                ->when(is_numeric($value),
+                    fn ($q) => $q->whereKey($value),
+                    fn ($q) => $q->where('slug', $value) // remove if you don't use slugs
+                )
+                ->firstOrFail();
+        });
+
+        Route::get('/clearMediaCollections',[PostController::class, 'clearMediaCollections'])
+            ->name('tenant.posts.clearMediaCollections');
+
 
         Route::get('/postsIndex', [PostController::class, 'index'])
             ->name('tenant.posts.index');
@@ -100,7 +119,7 @@ Route::prefix('{tenant}')
         Route::post('/postImageUpload', [PostController::class, 'store'])
             ->name('tenant.posts.store');
         // routes/web.php (inside your {tenant} + web + tenant middleware group)
-        Route::get('/', fn () => view('tenant.landing', ['tenant' => tenant('id')]))
+        Route::get('/', [PostController::class, 'showCarousel'])
             ->name('tenant.landing');
 
         Route::get('/dashboard', [DashboardController::class, 'index'])
@@ -118,7 +137,39 @@ Route::prefix('{tenant}')
 
         // Cancel immediately (optional)
         Route::post('/subscriptions/{stripeId}/cancel-now', [SubscriptionManageController::class, 'cancelNow'])
-            ->name('subscriptions.cancelNow');      
+            ->name('subscriptions.cancelNow'); 
+            
+        // Checkout initiation route (POST handles actual Stripe API call)
+        Route::post('/subscribe', [UserSubscriptionController::class, 'checkout'])->name('subscription.checkout');
+        
+        // Success/Cancel pages
+        Route::get('/subscribe/success', [UserSubscriptionController::class, 'success'])->name('subscription.success');
+        Route::get('/subscribe/cancel', [UserSubscriptionController::class, 'cancel'])->name('subscription.cancel');
+
+    // The landing page for the micro-site
+    // Route::get('/', function () {
+    //     return view('tenant.subscribe'); 
+    // })->name('tenant.microsite');
+
+        Route::domain(env('APP_URL'))->group(function () {
+            // Requires a logged-in creator user with an attached tenant model
+            Route::get('/onboarding', function() {
+                return view('central.onboarding');
+            })->name('central.dashboard'); // Used as the return target
+            
+            // 1. Create Stripe Account and get Account Link
+            Route::get('/stripe/connect/create', [CreatorOnboardingController::class, 'createStripeAccount'])
+                ->name('stripe.connect.create');
+
+            // 2. Stripe Redirect (where the creator returns after setup)
+            Route::get('/stripe/connect/return', [CreatorOnboardingController::class, 'handleOauthRedirect'])
+                ->name('stripe.connect.return');
+                
+            // 3. Stripe Redirect Refresh (if link expired)
+            Route::get('/stripe/connect/refresh', [CreatorOnboardingController::class, 'handleOauthRefresh'])
+                ->name('stripe.connect.refresh');
+        });
+
 
     });
 
@@ -144,6 +195,8 @@ Route::middleware(['web','ctx.tenant'])->group(function () {
         return 'Landlord area';
     })->name('landlord.home');
 });
+
+
 
 
 

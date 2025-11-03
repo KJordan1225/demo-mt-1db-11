@@ -9,13 +9,12 @@ class TenantPathGenerator implements PathGenerator
 {
     protected function base(Media $media): string
     {
-        $tenantId = $media->tenant_id
-            ?? (function_exists('tenant') && tenant()
-                ? (method_exists(tenant(), 'getTenantKey') ? tenant()->getTenantKey() : tenant('id'))
-                : 'central');
+        $tenant = function_exists('tenant') && tenant() ? tenant('id') : 'central';
 
-        // e.g. tenant/alpha/App.Models.User/123/
-        return "tenant/{$tenantId}/{$media->model_type}/{$media->model_id}/";
+        // Example structure: tenants/{tenant}/{model}/{id}/
+        $model = str_replace('\\', '/', strtolower(class_basename($media->model_type)));
+
+        return "tenants/{$tenant}/{$model}/{$media->model_id}/";
     }
 
     public function getPath(Media $media): string
@@ -25,11 +24,11 @@ class TenantPathGenerator implements PathGenerator
 
     public function getPathForConversions(Media $media): string
     {
-        return $this->base($media).'conversions/';
+        return $this->base($media) . 'conversions/';
     }
 
     public function getPathForResponsiveImages(Media $media): string
     {
-        return $this->base($media).'responsive/';
+        return $this->base($media) . 'responsive-images/';
     }
 }

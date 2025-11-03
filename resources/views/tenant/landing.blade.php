@@ -31,46 +31,7 @@
     object-fit: cover;           /* fill frame nicely */
   }
 </style>
-@php
-    // Assumes $branding is shared (display_name, slug, colors)
-    $title = $branding['display_name'] . ' · Welcome';
 
-    use Illuminate\Support\Facades\File;
-    use Spatie\MediaLibrary\MediaCollections\Models\Media;
-    use App\Models\Post;
-
-    // ---- 1) Spatie Media Library images (collection: 'carousel_samples' on Post) ----
-    $tenantId = function_exists('tenant') ? tenant('id') : null;
-
-    $libraryImages = Media::query()
-        ->where('collection_name', 'carousel_samples')
-        ->where('model_type', Post::class)
-        ->when($tenantId, function ($q) use ($tenantId) {
-            // Join to tenant-scoped posts so we only get this tenant's media
-            $q->join('posts', 'media.model_id', '=', 'posts.id')
-              ->where('posts.tenant_id', $tenantId)
-              ->select('media.*'); // keep Media columns after join
-        })
-        ->orderBy('order_column') // uses Spatie's order if set
-        ->get()
-        ->map(function (Media $m) {
-            // Prefer a web-friendly conversion if you have one; else original
-            // return $m->getUrl('web') ?: $m->getUrl();
-            return $m->getUrl();
-        });
-
-    dd($libraryImages);
-
-    // ---- 2) Public folder images (fallback / additive) ----
-    $dir = public_path('images/carousel');
-    $fileImages = collect();
-
-    // ---- 3) Merge (Media first), de-duplicate, reindex ----
-    $images = $libraryImages
-        ->merge($fileImages)
-        ->unique()
-        ->values();
-@endphp
 
 <div class="container landing-wrap d-flex flex-column justify-content-center py-5">
   {{-- Carousel Card --}}
@@ -78,7 +39,7 @@
     <div class="col-12 d-flex justify-content-center">
       <div class="card shadow-sm" style="max-width: 520px; width:100%;">
         <div class="card-body d-flex justify-content-center">
-          <div id="landingCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3000" aria-label="Hero image carousel">
+          <div id="landingCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000" aria-label="Hero image carousel">
             {{-- Indicators (dots) --}}
             @if(!empty($images) && count($images) > 1)
               <div class="carousel-indicators" style="bottom:-2.25rem;">
@@ -96,8 +57,10 @@
             <div class="carousel-inner">
               @forelse($images ?? [] as $i => $src)
                 <div class="carousel-item @if($i===0) active @endif">
-                  <div class="carousel-fixed">
-                    <img src="{{ $src }}" alt="Slide {{ $i+1 }}">
+                  <div class="carousel-fixed">                    
+                    <img src="{{ $src->getUrl('carousel_slide') }}" 
+                     class="d-block w-100" 
+                     alt="{{ $src->alt }}" >
                   </div>
                 </div>
               @empty

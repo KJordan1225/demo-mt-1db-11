@@ -85,6 +85,13 @@ class Post extends Model implements HasMedia
              ->quality(85)
              ->nonQueued();
 
+        // Square thumb (optional)
+        $this->addMediaConversion('carousel_slide')
+             ->fit(Fit::Crop, 464, 464)
+             ->format('jpg')
+             ->quality(85)
+             ->nonQueued();
+
         // Web-friendly version
         $this->addMediaConversion('web')
              ->format('webp')

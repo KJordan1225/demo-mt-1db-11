@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Post;
 use Illuminate\Http\Request;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
+
 
 class PostController extends Controller
 {
@@ -48,6 +50,33 @@ class PostController extends Controller
         $posts = Post::withoutGlobalScopes()->orderByDesc('id')->paginate(20);
 
         return view('post.index', compact('posts'));
+    }
+
+    public function showCarousel()
+    {      
+
+        $tenantId = 'aaaa';
+
+        $images = Media::query()
+            ->where('collection_name', 'carousel_samples')
+            ->whereHasMorph('model', [Post::class], function ($q) use ($tenantId) {
+                $q->where('tenant_id', $tenantId);
+            })
+            ->orderBy('order_column')   // Spatie’s ordering if you use it
+            ->get();       
+
+        
+        // $images = $post->getMedia('carousel_samples');
+
+        return view('tenant.landing', ['tenant' => $tenantId],compact('images'));
+    }
+
+
+    public function clearMediaCollections(Request $request, Post $post)
+    {
+        $post->clearMediaCollection('carousel_samples');
+
+        return redirect()->back()->with('success', 'Media collection cleared.');
     }
 
 }

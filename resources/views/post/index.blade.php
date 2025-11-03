@@ -52,6 +52,12 @@
         </table>
       </div>
 
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <a href="{{ route('tenant.posts.clearMediaCollections', ['tenant' => tenant('id')]) }}" class="btn btn-primary btn-sm">Clear Media Collection</a>
+        &nbsp;&nbsp;&nbsp;
+        <a href="{{ route('tenant.post.image.upload', ['tenant' => tenant('id')]) }}" class="btn btn-primary btn-sm">Upload Image</a>
+      </div>
+
       @if(method_exists($posts, 'links'))
         <div class="mt-3">
           {{ $posts->links() }}
