@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use Stripe\Exception\ApiErrorException;
 use Illuminate\Support\Facades\Log;
 
+
 class CreatorOnboardingController extends Controller
 {
     /**
@@ -16,7 +17,10 @@ class CreatorOnboardingController extends Controller
      */
     public function createStripeAccount(Tenant $tenant)
     {
+       
         try {
+            $tenantId = auth()->user()->tenant_id;
+            $tenant = \App\Models\Tenant::on(config('tenancy.database.central_connection'))->findOrFail($tenantId);
             // 1. Create a Stripe Express/Standard Account
             $account = Tenant::platformStripeClient()->accounts->create([
                 'type' => 'express', // Recommended for creator platforms
@@ -28,10 +32,12 @@ class CreatorOnboardingController extends Controller
                 ],
                 'business_type' => 'individual',
             ]);
-
-            // Save the Stripe Account ID to the Tenant model
-            $tenant->update(['stripe_account_id' => $account->id]);
-
+            
+            $tenantId = auth()->user()->tenant_id;
+            $tenant = \App\Models\Tenant::on(config('tenancy.database.central_connection'))->findOrFail($tenantId);
+            $tenant->stripe_account_id = $account->id;  // <-- column
+            $tenant->save();
+            
             // 2. Create an Account Link (Onboarding URL)
             $refreshUrl = route('stripe.connect.refresh', ['tenant' => $tenant->id]);
             $returnUrl = route('stripe.connect.return', ['tenant' => $tenant->id]);
@@ -42,9 +48,10 @@ class CreatorOnboardingController extends Controller
                 'return_url' => $returnUrl,
                 'type' => 'account_onboarding',
             ]);
-
-            // Save the onboarding link (for re-use if link expires)
-            $tenant->update(['onboarding_link' => $accountLink->url]);
+            $tenantId = auth()->user()->tenant_id;
+            $tenant = \App\Models\Tenant::on(config('tenancy.database.central_connection'))->findOrFail($tenantId);
+            $tenant->onboarding_link = $accountLink->url;  // <-- column
+            $tenant->save();            
             
             // Redirect the creator to Stripe to complete onboarding
             return redirect()->away($accountLink->url);
@@ -91,15 +98,23 @@ class CreatorOnboardingController extends Controller
      */
     protected function createSubscriptionProductAndPrice(Tenant $tenant)
     {
+        
         try {
-            $stripe = $tenant->stripeClientAsCreator();
+            $tenantId = auth()->user()->tenant_id;            
+            $tenant = \App\Models\Tenant::on(config('tenancy.database.central_connection'))->findOrFail($tenantId);
+            // dd($tenant->stripe_account_id);
+            $stripeId = $tenant->stripe_account_id; 
+            // dd($stripeId);
+            $stripe = $tenant->stripeClientAsCreator($stripeId);
 
             // 1. Create a Product on the creator's connected account
             $product = $stripe->products->create([
                 'name' => 'Monthly Exclusive Access',
                 'description' => "Subscription to {$tenant->id}'s exclusive content.",
                 'metadata' => ['tenant_id' => $tenant->id],
-            ]);
+            ],
+                ['stripe_account' => $tenant->stripe_account_id] // Specify connected account
+            );
 
             // 2. Create a Price for that Product (e.g., $9.99/month)
             $price = $stripe->prices->create([
@@ -107,10 +122,15 @@ class CreatorOnboardingController extends Controller
                 'currency' => 'usd',
                 'recurring' => ['interval' => 'month'],
                 'product' => $product->id,
-            ]);
+            ],
+                ['stripe_account' => $tenant->stripe_account_id] // Specify connected account
+            );
 
             // 3. Store the Price ID on the central Tenant model
-            $tenant->update(['subscription_price_id' => $price->id]);
+            $tenantId = auth()->user()->tenant_id;
+            $tenant = \App\Models\Tenant::on(config('tenancy.database.central_connection'))->findOrFail($tenantId);
+            $tenant->subscription_price_id = $price->id;  // <-- column
+            $tenant->save(); 
 
         } catch (ApiErrorException $e) {
             Log::error("Failed to create product/price on connected account {$tenant->id}: " . $e->getMessage());

@@ -32,7 +32,36 @@
   }
 </style>
 
+<div>
+  {{-- Session Alerts --}}
+  @if (session('success'))
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+          {{ session('success') }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+  @endif
 
+  @if (session('error'))
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          {{ session('error') }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+  @endif
+
+  @if (session('warning'))
+      <div class="alert alert-warning alert-dismissible fade show" role="alert">
+          {{ session('warning') }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+  @endif
+
+  @if (session('info'))
+      <div class="alert alert-info alert-dismissible fade show" role="alert">
+          {{ session('info') }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+  @endif
+</div>
 <div class="container landing-wrap d-flex flex-column justify-content-center py-5">
   {{-- Carousel Card --}}
   <div class="row justify-content-center mb-4">
@@ -131,12 +160,16 @@
               </div>
             </div>
           </div>
-
+          @php  
+            $firstSegment = request()->segment(1);
+          @endphp
           <div class="text-center">
-            <a href="#"
-               class="btn btn-primary btn-lg px-4">
-              Subscribe Now
-            </a>
+            <form method="POST" action="{{ route('subscription.checkout', ['tenant' => $firstSegment]) }}" class="text-center my-3">
+              @csrf
+              <button type="submit" class="btn btn-primary btn-lg w-100 w-md-auto">
+                  Subscribe Now
+              </button>
+            </form>
             {{-- If you have a route: --}}
             {{-- <a href="{{ route('tenant.subscribe', ['tenant' => tenant('id')]) }}" class="btn btn-primary btn-lg px-4">Subscribe Now</a> --}}
           </div>

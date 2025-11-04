@@ -8,6 +8,7 @@ use App\Models\Tenant;
 use App\Models\Permission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
 class LandlordPlansController extends Controller
 {
@@ -53,6 +54,7 @@ class LandlordPlansController extends Controller
             'accent_color'  => $data['accent_color'],
             'bg_color'      => $data['bg_color'],
             'text_color'    => $data['text_color'],
+            'creator_email' => $data['email'],
         ]);
 
         // 2) Seed per-tenant roles & permissions
@@ -79,12 +81,15 @@ class LandlordPlansController extends Controller
         // Create the user
         $user = User::create([
             'name' => $data['display_name'],
+            'tenant_id' => $data['id'],
             'email' => $request->email,
             'password' => Hash::make($request->password), // Hash the password
         ]);
 
         // Assign the roleto new user
         $user->roles()->attach($tAdmin->id, ['tenant_id' => $tenant->id ?? null]);
+
+        Auth::login($user);
 
         return redirect()->route('guest.home')->with('status', 'Tenant created.');
     }

@@ -16,6 +16,8 @@ use App\Http\Controllers\Tenant\SubscriptionManageController;
 use App\Http\Controllers\Central\CreatorOnboardingController;
 use App\Http\Controllers\Tenant\UserSubscriptionController;
 use App\Models\Post;
+use App\Models\Tenant;
+
 
 
 // ----- Landlord (central) -----
@@ -25,6 +27,32 @@ Route::get('/', fn () => view('welcome'))->name('home');
 if (file_exists(__DIR__.'/auth.php')) {
     require __DIR__.'/auth.php';
 }
+
+Route::get('/onboarding', function() {
+    return view('central.onboarding');
+    })->name('central.dashboard');
+
+
+// 1. Create Stripe Account and get Account Link
+Route::get('/stripe/connect/create', [CreatorOnboardingController::class, 'createStripeAccount'])
+    ->name('stripe.connect.create');
+// 2. Stripe Redirect (where the creator returns after setup)
+Route::get('/stripe/connect/return', [CreatorOnboardingController::class, 'handleOauthRedirect'])
+    ->name('stripe.connect.return');    
+// 3. Stripe Redirect Refresh (if link expired)
+Route::get('/stripe/connect/refresh', [CreatorOnboardingController::class, 'handleOauthRefresh'])
+    ->name('stripe.connect.refresh');
+
+// Central route – no tenant initialization
+// Route::middleware(['web', 'universal']) // alias for PreventAccessFromCentralDomains
+//     ->get('/onboarding', function() {
+//     return view('central.onboarding');
+//     })->name('central.dashboard'); // Used as the return target
+                
+// Route::domain(env('APP_URL'))->group(function () {
+    
+    
+// });
 
 // Landlord-level subscriptions management (not tenant-scoped)
 Route::get('/admin/dashboard', [LandlordDashboardController::class, 'index'])
@@ -106,11 +134,10 @@ Route::prefix('{tenant}')
                     fn ($q) => $q->where('slug', $value) // remove if you don't use slugs
                 )
                 ->firstOrFail();
-        });
+        });        
 
         Route::get('/clearMediaCollections',[PostController::class, 'clearMediaCollections'])
-            ->name('tenant.posts.clearMediaCollections');
-
+            ->name('tenant.posts.clearMediaCollections');       
 
         Route::get('/postsIndex', [PostController::class, 'index'])
             ->name('tenant.posts.index');
@@ -140,36 +167,19 @@ Route::prefix('{tenant}')
             ->name('subscriptions.cancelNow'); 
             
         // Checkout initiation route (POST handles actual Stripe API call)
-        Route::post('/subscribe', [UserSubscriptionController::class, 'checkout'])->name('subscription.checkout');
+        Route::post('/subscribe', [UserSubscriptionController::class, 'checkout'])
+        ->name('subscription.checkout');
         
         // Success/Cancel pages
-        Route::get('/subscribe/success', [UserSubscriptionController::class, 'success'])->name('subscription.success');
-        Route::get('/subscribe/cancel', [UserSubscriptionController::class, 'cancel'])->name('subscription.cancel');
+        Route::get('/subscribe/success', [UserSubscriptionController::class, 'success'])
+        ->name('subscription.success');
+        Route::get('/subscribe/cancel', [UserSubscriptionController::class, 'cancel'])
+        ->name('subscription.cancel');
 
     // The landing page for the micro-site
     // Route::get('/', function () {
     //     return view('tenant.subscribe'); 
-    // })->name('tenant.microsite');
-
-        Route::domain(env('APP_URL'))->group(function () {
-            // Requires a logged-in creator user with an attached tenant model
-            Route::get('/onboarding', function() {
-                return view('central.onboarding');
-            })->name('central.dashboard'); // Used as the return target
-            
-            // 1. Create Stripe Account and get Account Link
-            Route::get('/stripe/connect/create', [CreatorOnboardingController::class, 'createStripeAccount'])
-                ->name('stripe.connect.create');
-
-            // 2. Stripe Redirect (where the creator returns after setup)
-            Route::get('/stripe/connect/return', [CreatorOnboardingController::class, 'handleOauthRedirect'])
-                ->name('stripe.connect.return');
-                
-            // 3. Stripe Redirect Refresh (if link expired)
-            Route::get('/stripe/connect/refresh', [CreatorOnboardingController::class, 'handleOauthRefresh'])
-                ->name('stripe.connect.refresh');
-        });
-
+    // })->name('tenant.microsite');        
 
     });
 
@@ -195,11 +205,6 @@ Route::middleware(['web','ctx.tenant'])->group(function () {
         return 'Landlord area';
     })->name('landlord.home');
 });
-
-
-
-
-
 
 
 

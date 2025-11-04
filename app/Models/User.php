@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Models\Role;
 use App\Models\Subscription;
+use App\Models\Tenant;
 use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -107,6 +108,14 @@ class User extends Authenticatable
     public function subscriptions()
     {
         return $this->hasMany(Subscription::class);
+    }
+
+    public function currentTenant(): ?Tenant
+    {
+        // Laravel's automatic property loading for relationships 
+        // will call the 'tenant()' method above.
+        $tenant = tenant();
+        return $tenant;
     }
 
 }

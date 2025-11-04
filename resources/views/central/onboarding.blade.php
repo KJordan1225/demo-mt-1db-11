@@ -25,15 +25,20 @@
           @endif
 
           @php
+
+            use App\Models\Tenant;
+
+            $tenantId = Auth::user()->tenant_id;
+            $tenant = Tenant::find($tenantId);
             $tenantModel = Auth::check() ? optional(Auth::user()->currentTenant()) : null;
-            $stripeId    = $tenantModel?->stripe_account_id;
-            $tenantParam = tenant('id') ?? $tenantModel?->id;
+            $stripeId    = $tenant?->stripe_account_id;
+            $tenantParam = tenant('id') ?? $tenant?->id;
           @endphp
 
           @if (Auth::check() && empty($stripeId))
             <a
-              href="{{ route('stripe.connect.create', ['tenant' => $tenantParam]) }}"
-              class="btn btn-primary btn-lg w-100"
+                href="{{ route('stripe.connect.create', ['tenant' => $tenant]) }}"
+                class="btn btn-primary btn-lg w-100"
             >
               Connect with Stripe
             </a>

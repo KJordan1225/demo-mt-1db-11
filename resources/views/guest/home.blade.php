@@ -1,6 +1,7 @@
 @extends('layouts.landlord')
 
 @section('content')
+
 <style>
     /* Page theming (uses your brand vars if present) */
     :root{
@@ -226,6 +227,8 @@
                            class="btn btn-outline-primary">Choose a Plan</a>
                         <a href="{{ route('guest.create.microsite') }}"
                            class="btn btn-outline-primary">Establish Your Micro-site</a>
+                        <a href="{{ route('central.dashboard') }}"
+                           class="btn btn-outline-primary">Onboard with Stripe</a>
                     </div>
 
                     <hr class="my-4">
