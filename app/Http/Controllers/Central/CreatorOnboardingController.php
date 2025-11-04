@@ -11,6 +11,13 @@ use Illuminate\Support\Facades\Log;
 
 class CreatorOnboardingController extends Controller
 {
+     public function __construct()
+    {
+        // Run for every action in this controller
+        $this->middleware('no.self.sub');        
+    }
+    
+    
     /**
      * Initiate the Stripe Connect account creation process for a given Tenant.
      * This assumes the Tenant already exists and is logged into the central app.

@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use App\Http\Middleware\AttachTenantContext;
 use App\Http\Middleware\SetTenantRouteDefaults;
+use App\Http\Middleware\PreventSelfSubscription;
 use App\Providers\TenantBrandingServiceProvider;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -24,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant.defaults' => SetTenantRouteDefaults::class,
             'universal'       => PreventAccessFromCentralDomains::class,
             'ctx.tenant'      => AttachTenantContext::class,
+            'no.self.sub'     => PreventSelfSubscription::class,
         ]);
 
     })

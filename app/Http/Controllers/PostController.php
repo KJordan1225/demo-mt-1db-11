@@ -52,10 +52,10 @@ class PostController extends Controller
         return view('post.index', compact('posts'));
     }
 
-    public function showCarousel()
+    public function showCarousel(Request $request)
     {      
 
-        $tenantId = 'aaaa';
+        $tenantId = request()->segment(1);
 
         $images = Media::query()
             ->where('collection_name', 'carousel_samples')
@@ -63,10 +63,7 @@ class PostController extends Controller
                 $q->where('tenant_id', $tenantId);
             })
             ->orderBy('order_column')   // Spatie’s ordering if you use it
-            ->get();       
-
-        
-        // $images = $post->getMedia('carousel_samples');
+            ->get(); 
 
         return view('tenant.landing', ['tenant' => $tenantId],compact('images'));
     }

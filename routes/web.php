@@ -33,15 +33,17 @@ Route::get('/onboarding', function() {
     })->name('central.dashboard');
 
 
-// 1. Create Stripe Account and get Account Link
-Route::get('/stripe/connect/create', [CreatorOnboardingController::class, 'createStripeAccount'])
-    ->name('stripe.connect.create');
-// 2. Stripe Redirect (where the creator returns after setup)
-Route::get('/stripe/connect/return', [CreatorOnboardingController::class, 'handleOauthRedirect'])
-    ->name('stripe.connect.return');    
-// 3. Stripe Redirect Refresh (if link expired)
-Route::get('/stripe/connect/refresh', [CreatorOnboardingController::class, 'handleOauthRefresh'])
-    ->name('stripe.connect.refresh');
+Route::middleware(['auth', 'no.self.sub'])->group(function () {
+    // 1. Create Stripe Account and get Account Link
+    Route::get('/stripe/connect/create', [CreatorOnboardingController::class, 'createStripeAccount'])
+        ->name('stripe.connect.create');
+    // 2. Stripe Redirect (where the creator returns after setup)
+    Route::get('/stripe/connect/return', [CreatorOnboardingController::class, 'handleOauthRedirect'])
+        ->name('stripe.connect.return');    
+    // 3. Stripe Redirect Refresh (if link expired)
+    Route::get('/stripe/connect/refresh', [CreatorOnboardingController::class, 'handleOauthRefresh'])
+        ->name('stripe.connect.refresh');
+});
 
 // Central route – no tenant initialization
 // Route::middleware(['web', 'universal']) // alias for PreventAccessFromCentralDomains
