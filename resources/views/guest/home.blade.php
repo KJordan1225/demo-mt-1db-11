@@ -228,9 +228,22 @@
                         <a href="{{ route('guest.create.microsite') }}"
                            class="btn btn-outline-primary">Establish Your Micro-site</a>
                         <a href="{{ route('central.dashboard') }}"
-                           class="btn btn-outline-primary">Onboard with Stripe</a>
+                           class="btn btn-outline-primary">Onboard with Stripe</a>                        
                     </div>
+                    @auth
+                        @php
+                            $tenantModel = tenancy();                           
+                        @endphp
 
+                        @if ($tenantModel)
+                            @if(Auth::check() && Auth::user()->tenant_id)
+                                <a href="{{ route('central.price.setup', ['tenant' => Auth::user()->tenant_id]) }}" class="btn btn-outline-primary">
+                                    Set My Subscription Price
+                                </a>
+                            @endif
+                        @endif
+                    @endauth
+                    
                     <hr class="my-4">
 
                     <h6 class="text-uppercase small text-muted mb-2">What you get</h6>

@@ -4,17 +4,97 @@ namespace App\Http\Controllers\Central;
 
 use App\Models\Tenant;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
-use Stripe\Exception\ApiErrorException;
 use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use Stripe\Exception\ApiErrorException;
+use Illuminate\Support\Facades\Redirect;
 
 
 class CreatorOnboardingController extends Controller
 {
-     public function __construct()
+    
+    /**
+     * Display the creator dashboard/onboarding status view.
+     */
+    public function showDashboard()
     {
-        // Run for every action in this controller
-        $this->middleware('no.self.sub');        
+        // This view will either show the 'Connect' button or the 'Set Price' button
+        return view('central.creator-payment-setup');
+    }
+
+
+    /**
+     * Route to show the price setting form.
+     */
+    public function showPriceSetup(Tenant $tenant)
+    {
+        // Ensure the logged-in user owns this tenant before showing the form
+        abort_unless(Auth::check(), 403);
+        abort_unless(Auth::user()->tenant_id === $tenant->getKey(), 403);
+
+        // dd($tenant);
+        return view('central.price-setup', ['tenant' => $tenant]);
+        // Pass a SINGLE model to the view (named $tenant)
+        // return view('central.price-setup', compact('tenant'));
+    }
+
+
+
+    /**
+     * Handle the price submission, create Stripe Product/Price on connected account.
+     */
+    public function storeSubscriptionPrice(Request $request, Tenant $tenant)
+    {
+        // 1. Authorization check
+        if (Auth::user()->tenant_id !== $tenant->id || empty($tenant->stripe_account_id)) {
+            return Redirect::back()->with('error', 'Authentication or Stripe account status invalid.');
+        }
+
+        // 2. Validation
+        $data = $request->validate([
+            'price' => 'required|numeric|min:1.00',
+        ]);
+        
+        $amountInCents = round($data['price'] * 100);
+
+        try {
+            // Use the helper method to run API calls on the connected account
+            $stripe = $tenant->tenantStripe();
+
+            // 3. Create a Product on the creator's connected account
+            // This is a single, generic product for all their subscriptions
+            if (!$tenant->stripe_product_id) {
+                $product = $stripe->products->create([
+                    'name' => "{$tenant->id}'s Exclusive Content Access",
+                    'type' => 'service',
+                ]);
+                $tenant->stripe_product_id = $product->id;
+            }
+
+            // 4. Create a Price on the creator's connected account (or archive old one and create new)
+            // Stripe recommends creating a new Price object instead of updating an old one.
+            $price = $stripe->prices->create([
+                'product' => $tenant->stripe_product_id,
+                'unit_amount' => $amountInCents,
+                'currency' => 'usd',
+                'recurring' => ['interval' => 'month'],
+                // Set the price nickname for easy identification
+                'nickname' => 'Monthly Subscription ' . $data['price'], 
+            ]);
+
+            // 5. Update the central Tenant model
+            $tenant->monthly_price = $data['price'];
+            $tenant->subscription_price_id = $price->id;
+            $tenant->save();
+
+            return Redirect::back()->with('status', 'Subscription price successfully created on Stripe!');
+
+        } catch (\Stripe\Exception\ApiErrorException $e) {
+            return Redirect::back()->with('error', 'Stripe API Error: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            return Redirect::back()->with('error', 'An unexpected error occurred: ' . $e->getMessage());
+        }
     }
     
     

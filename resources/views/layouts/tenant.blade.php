@@ -22,7 +22,7 @@
             $tenant = Tenant::find($tenantKey) ?? Tenant::where('id', $tenantKey)->first();
             if ($tenant) {
                 $tenancy->initialize($tenant);
-                $tenantId = tenant('id'); // now available
+                $tenantId = auth()->user()->tenant_id; // now available
             }
         }
     }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Tenant;
 
 
 use App\Models\User;
+use App\Models\Tenant;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;

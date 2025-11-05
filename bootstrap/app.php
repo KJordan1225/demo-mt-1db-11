@@ -25,7 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant.defaults' => SetTenantRouteDefaults::class,
             'universal'       => PreventAccessFromCentralDomains::class,
             'ctx.tenant'      => AttachTenantContext::class,
-            'no.self.sub'     => PreventSelfSubscription::class,
+            'noselfsub'       => PreventSelfSubscription::class,
         ]);
 
     })

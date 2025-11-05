@@ -32,6 +32,15 @@ Route::get('/onboarding', function() {
     return view('central.onboarding');
     })->name('central.dashboard');
 
+// 1. Route to show the price input form
+Route::get('/onboarding/price-setup/{tenant:id}', [CreatorOnboardingController::class, 'showPriceSetup'])
+    ->name('central.price.setup')
+    ->middleware('auth');
+
+// 2. Route to handle the form submission and create the Stripe Price
+Route::post('/onboarding/price-setup/{tenant:id}', [CreatorOnboardingController::class, 'storeSubscriptionPrice'])
+    ->name('central.price.store')
+    ->middleware('auth');
 
 Route::middleware(['auth', 'no.self.sub'])->group(function () {
     // 1. Create Stripe Account and get Account Link

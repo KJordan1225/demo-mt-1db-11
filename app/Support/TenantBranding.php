@@ -2,6 +2,9 @@
 
 namespace App\Support;
 
+use App\Models\Tenant;
+use Illuminate\Support\Facades\Auth;
+
 class TenantBranding
 {
     public static function current(): array
@@ -11,7 +14,11 @@ class TenantBranding
         }
 
         $t = tenant();
-        $id = method_exists($t, 'getTenantKey') ? $t->getTenantKey() : $t->id;
+        if(Auth::check() && Auth::user()->tenant_id) {
+            $t = Tenant::find(Auth::user()->tenant_id);
+        }
+        // $id = method_exists($t, 'getTenantKey') ? $t->getTenantKey() : $t->id;
+        $id = method_exists($t, 'getTenantKey') ? $t->getTenantKey() : $t->getKey();
         
         // Safely read branding data from tenants.data JSON
         $get = fn (string $key, $default = null) => method_exists($t, 'get') ? $t->get($key, $default) : data_get($t->data ?? [], $key, $default);
