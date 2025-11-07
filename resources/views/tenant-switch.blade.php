@@ -56,9 +56,11 @@
                         <img src="{{ asset('images/landlord-login-img1.png') }}" alt="Login Logo"
                              class="mb-4" style="height:64px;width:64px;object-fit:cover;border-radius:.75rem;">
                     @endif
-
+                    @php 
+                        $altName = 'StarCity Starz';
+                    @endphp
                     <h1 class="display-5 fw-semibold brand-title mb-2">
-                        StarCity Starz 
+                        {{ $branding['display_name'] ?? $altName }} 
                     </h1>
 
                     <div class="text-muted">

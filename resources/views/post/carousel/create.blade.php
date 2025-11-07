@@ -12,7 +12,7 @@
           <h1 class="h4 mb-4">Create Post</h1>
 
           <form method="POST"
-                action="{{ route('tenant.posts.store', ['tenant' => tenant('id')]) }}"
+                action="{{ route('tenant.carousel.posts.store', ['tenant' => tenant('id')]) }}"
                 enctype="multipart/form-data"
                 novalidate>
             @csrf
@@ -42,16 +42,7 @@
               @error('description')
                 <div class="invalid-feedback">{{ $message }}</div>
               @enderror
-            </div>
-
-            {{-- Media Type Selector --}}
-            <div class="mb-3">
-              <label for="media_type" class="form-label">Media Type</label>
-              <select id="media_type" name="media_type" class="form-select">
-                <option value="image" {{ old('media_type', 'image') === 'image' ? 'selected' : '' }}>image</option>
-                <option value="video" {{ old('media_type') === 'video' ? 'selected' : '' }}>video</option>
-              </select>
-            </div>
+            </div>            
 
             {{-- IMAGE input -> Spatie Media Library (collection: carousel_samples) --}}
             <div id="image-input" class="mb-3">
@@ -73,28 +64,7 @@
                 <div class="invalid-feedback d-block">{{ $message }}</div>
               @enderror
             </div>
-
-            {{-- VIDEO input -> Spatie Media Library (collection: carousel_videos) --}}
-            <div id="video-input" class="mb-3 d-none">
-              <label for="videos" class="form-label">Videos</label>
-              <input id="videos"
-                     type="file"
-                     name="videos[]"
-                     class="form-control @error('videos') is-invalid @enderror @error('videos.*') is-invalid @enderror"
-                     accept="video/*"
-                     multiple>
-              <div class="form-text">
-                Upload one or more videos. Consider compressing for faster uploads.
-                These will be saved to the <code>carousel_videos</code> media collection.
-              </div>
-              @error('videos')
-                <div class="invalid-feedback d-block">{{ $message }}</div>
-              @enderror
-              @error('videos.*')
-                <div class="invalid-feedback d-block">{{ $message }}</div>
-              @enderror
-            </div>
-
+            
             {{-- tenant_id hidden field --}}
             <input type="hidden" name="tenant" value="{{ tenant('id') }}">
 

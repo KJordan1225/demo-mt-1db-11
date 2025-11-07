@@ -1,22 +1,23 @@
 <?php
 
+use App\Models\Post;
+use App\Models\Tenant;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\GuestController;
 use App\Http\Controllers\TenantController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\CarouselPostController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TenantSwitchController;
 use App\Http\Controllers\LandlordPlansController;
 use App\Http\Controllers\Tenant\DashboardController;
 use App\Http\Controllers\LandlordDashboardController;
 use Stancl\Tenancy\Middleware\InitializeTenancyByPath;
-use App\Http\Controllers\Auth\AuthenticatedSessionController;
-use App\Http\Controllers\Tenant\SubscriptionManageController;
-use App\Http\Controllers\Central\CreatorOnboardingController;
 use App\Http\Controllers\Tenant\UserSubscriptionController;
-use App\Models\Post;
-use App\Models\Tenant;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Central\CreatorOnboardingController;
+use App\Http\Controllers\Tenant\SubscriptionManageController;
 
 
 
@@ -42,7 +43,7 @@ Route::post('/onboarding/price-setup/{tenant:id}', [CreatorOnboardingController:
     ->name('central.price.store')
     ->middleware('auth');
 
-Route::middleware(['auth', 'no.self.sub'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     // 1. Create Stripe Account and get Account Link
     Route::get('/stripe/connect/create', [CreatorOnboardingController::class, 'createStripeAccount'])
         ->name('stripe.connect.create');
@@ -147,17 +148,31 @@ Route::prefix('{tenant}')
                 ->firstOrFail();
         });        
 
+        Route::get('/', [TenantSwitchController::class, 'loadTenantLogin'])
+            ->name('creator.login');
+
         Route::get('/clearMediaCollections',[PostController::class, 'clearMediaCollections'])
             ->name('tenant.posts.clearMediaCollections');       
 
-        Route::get('/postsIndex', [PostController::class, 'index'])
-            ->name('tenant.posts.index');
+        Route::get('/gallery', [PostController::class, 'viewImageGallery'])
+            ->name('tenant.gallery.index');
+        Route::get('/video-gallery', [PostController::class, 'viewVideoGallery'])
+            ->name('tenant.video.gallery.index');
+
         Route::get('/postImageUpload', [PostController::class, 'create'])
             ->name('tenant.post.image.upload');
         Route::post('/postImageUpload', [PostController::class, 'store'])
             ->name('tenant.posts.store');
+        
+        
+        Route::get('/postsIndex', [CarouselPostController::class, 'index'])
+            ->name('tenant.posts.index');
+        Route::get('/carouselImageUpload', [CarouselPostController::class, 'create'])
+            ->name('tenant.carousel.post.image.upload');
+        Route::post('/carouselImageUpload', [CarouselPostController::class, 'store'])
+            ->name('tenant.carousel.posts.store');
         // routes/web.php (inside your {tenant} + web + tenant middleware group)
-        Route::get('/', [PostController::class, 'showCarousel'])
+        Route::get('/show-carousel', [CarouselPostController::class, 'showCarousel'])
             ->name('tenant.landing');
 
         Route::get('/dashboard', [DashboardController::class, 'index'])
@@ -200,8 +215,8 @@ Route::get('/admin/subscriptions', [SubscriptionManageController::class, 'indexC
     ->name('landlord.subscriptions.index');
 
 // Handle manual entry of a tenant id and redirect to /{tenant}/login
-Route::post('/tenant/switch', [TenantSwitchController::class, 'switch'])
-    ->name('tenant.switch');
+// Route::post('/tenant/switch', [TenantSwitchController::class, 'switch'])
+//     ->name('tenant.switch');
 
 // Landlord (central) profile.edit`
 Route::middleware(['auth','verified'])

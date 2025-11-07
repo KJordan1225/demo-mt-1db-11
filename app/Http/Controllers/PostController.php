@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
+use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
@@ -17,29 +18,62 @@ class PostController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'title' => ['required','string','max:255'],
-            'description' => ['nullable','string'],
-            'tenant' => ['nullable','string'],
-            'images.*' => ['nullable','image','max:5120'], // 5MB each
+            'title'        => ['required','string','max:255'],
+            'description'  => ['nullable','string'],
+            'tenant'       => ['nullable','string'],
+            'media_type'   => ['nullable','in:image,video'],
+
+            // IMAGES
+            'images'       => ['nullable','array'],
+            'images.*'     => ['nullable','image','max:5120'], // 5MB each
+
+            // VIDEOS
+            'videos'       => ['nullable','array'],
+            'videos.*'     => [
+                'nullable',
+                'mimetypes:video/mp4,video/quicktime,video/webm,video/x-msvideo,video/x-matroska',
+                'max:512000' // 500MB each (KB)
+            ],
         ]);
 
         $post = Post::create([
-            'title' => $data['title'],
+            'title'       => $data['title'],
             'description' => $data['description'] ?? null,
-            // tenant_id auto-set by BelongsToTenant (if you use that trait)
+            'media_type'  => $data['media_type'] ?? null,
+            // tenant_id auto-set by BelongsToTenant trait if used
         ]);
 
-        $tenant = $data['tenant']; // get current tenant_id
+        $tenant = $data['tenant'] ?? tenant('id');
 
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $img) {
-                $post->addMedia($img)->toMediaCollection('carousel_samples');
+        // --- Store IMAGES -> image_gallery ---
+        if (
+            (!$data['media_type'] || $data['media_type'] === 'image') &&
+            $request->hasFile('images')
+        ) {
+            foreach ((array) $request->file('images') as $img) {
+                if ($img && $img->isValid()) {
+                    $post->addMedia($img)->toMediaCollection('image_gallery');
+                }
             }
         }
 
-        return redirect()->route('tenant.posts.index', ['tenant' => $tenant])
-                        ->with('success', 'Post created.');
+        // --- Store VIDEOS -> video_gallery ---
+        if (
+            (!$data['media_type'] || $data['media_type'] === 'video') &&
+            $request->hasFile('videos')
+        ) {
+            foreach ((array) $request->file('videos') as $vid) {
+                if ($vid && $vid->isValid()) {
+                    $post->addMedia($vid)->toMediaCollection('video_gallery');
+                }
+            }
+        }
+
+        return redirect()
+            ->route('tenant.posts.index', ['tenant' => $tenant])
+            ->with('success', 'Post created.');
     }
+
 
     public function index()
     {
@@ -74,6 +108,48 @@ class PostController extends Controller
         $post->clearMediaCollection('carousel_samples');
 
         return redirect()->back()->with('success', 'Media collection cleared.');
+    }
+
+    public function viewImageGallery(Request $request)
+    {
+        $tenantId = request()->segment(1);
+        // All media in `image_gallery` whose parent model has tenant_id = $tenantId
+        $media = Media::query()
+            ->where('collection_name', 'image_gallery')
+            ->whereHasMorph('model', [Post::class], function ($q) use ($tenantId) {
+                $q->where('tenant_id', $tenantId);
+            })
+            ->orderByDesc('id')
+            ->paginate(9);
+
+        return view('tenant.gallery.index', compact('media', 'tenantId'));
+    }
+
+
+    public function viewVideoGallery(Request $request)
+    {
+        $tenantId = request()->segment(1);
+        // Assuming Tenant has a media relationship (adjust accordingly to your model setup)
+        $tenant = Tenant::findOrFail($tenantId);
+
+        // Fetch all videos in 'video_gallery' collection, paginate 9 per page
+        // $videos = $tenant->media()
+        //                  ->where('collection_name', 'video_gallery')
+        //                  ->where('mime_type', 'video/%')  // Ensuring we're only fetching video files
+        //                  ->paginate(9);  // Paginate 9 videos per page
+
+        $videos = Media::query()
+            ->where('collection_name', 'video_gallery')
+            ->whereHasMorph('model', [Post::class], function ($q) use ($tenantId) {
+                $q->where('tenant_id', $tenantId);
+            })
+            ->where(function ($query) {
+                $query->where('mime_type', 'like', 'video/%');
+            })
+            ->orderByDesc('id')
+            ->paginate(9);
+
+        return view('tenant.videos.index', compact('videos'));
     }
 
 }

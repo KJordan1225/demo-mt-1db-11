@@ -37,4 +37,15 @@ class TenantSwitchController extends Controller
         // Redirect to that tenant's login (or wherever you prefer)
         return redirect()->route('tenant.login', ['tenant' => $tenantId]);
     }
+
+
+    public function loadTenantLogin(Request $request)
+    {
+        
+        $firstSegment = request()->segment(1);
+
+        $tenant = Tenant::find($firstSegment);
+
+        return view('tenant.login', compact('tenant' ));
+    }
 }

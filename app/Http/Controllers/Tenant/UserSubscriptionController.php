@@ -16,52 +16,54 @@ class UserSubscriptionController extends Controller
      */
     public function checkout(Request $request)
     {
-        // 1. Basic validation and authentication
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'Please log in to subscribe.');
         }
-        
-        // 1. Get the current tenant (creator)
+
         $creator = tenant();
 
-        // 2. Validation
-        if (!$creator->stripe_account_id || !$creator->subscription_price_id) {
+        if (!$creator?->stripe_account_id || !$creator?->subscription_price_id) {
             return back()->with('error', 'Creator payment setup is incomplete. Cannot subscribe.');
         }
-        
+
         try {
-            // 3. Authenticate the Stripe API client as the CONNECTED CREATOR ACCOUNT
-            // This is the core fix for the "No such price" error.
-            $stripe = $creator->tenantStripe(); // Uses the Stripe-Account header
-            $applicationFeePercent = 10.0; // Platform fee percentage
-            // 4. Create the Checkout Session on the CONNECTED account
+            // Platform Stripe client
+            $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
+
             $session = $stripe->checkout->sessions->create([
-                'mode' => 'subscription',
+                'mode'       => 'subscription',
                 'line_items' => [[
-                    'price' => $creator->subscription_price_id, // This Price ID now correctly exists on the connected account
+                    // IMPORTANT: this price must exist on the PLATFORM account
+                    'price'    => $creator->subscription_price_id,
                     'quantity' => 1,
                 ]],
-
-                // Define the fee to be collected by your Platform
-                'subscription_data' => [
-                    'application_fee_percent' => $applicationFeePercent,
-                ],
-
-                // Customer and URLs
                 'customer_email' => Auth::user()->email,
                 'success_url' => route('subscription.success', ['tenant' => $creator, 'session_id' => '{CHECKOUT_SESSION_ID}']),
-                'cancel_url' => route('subscription.cancel', ['tenant' => $creator]),
+                'cancel_url'  => route('subscription.cancel', ['tenant' => $creator]),
+
+                'subscription_data' => [
+                    // 20% platform fee
+                    'application_fee_percent' => 20,
+
+                    // Route the net funds to the creator’s connected account
+                    'transfer_data' => [
+                        'destination' => $creator->stripe_account_id, // acct_xxx
+                    ],
+
+                    'metadata' => ['tenant_id' => $creator->id],
+                ],
+
+                'metadata' => ['tenant_id' => $creator->id],
             ]);
 
             return redirect($session->url, 303);
 
-        } catch (\Exception $e) {
-            // Log error for debugging
+        } catch (\Throwable $e) {
             \Log::error("Stripe Checkout failed for Tenant {$creator->id}: " . $e->getMessage());
             return back()->with('error', 'Payment processing failed: ' . $e->getMessage());
         }
-    
     }
+
 
     /**
      * Handle successful subscription. (You would add database logic here)

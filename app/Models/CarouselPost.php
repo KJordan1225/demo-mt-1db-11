@@ -14,22 +14,19 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\Image\Manipulations;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\Image\Enums\Fit;
-use Spatie\MediaLibrary\MediaCollections\File; 
 
-class Post extends Model implements HasMedia
+class CarouselPost extends Model implements HasMedia
 {
     use HasFactory;
     use InteractsWithMedia;
     use BelongsToTenant;
 
     // If you keep the default table name `posts`, you can omit this.
-    protected $table = 'posts';
+    protected $table = 'carousel_posts';
 
     protected $fillable = [
         'tenant_id',     // string, nullable FK to tenants.id
-        'title',         // required
-        'description',   // nullable
-        'media_type',   // string, nullable, 'image' or 'video   '
+        'title',         // required          '
     ];
 
     /**
@@ -57,7 +54,7 @@ class Post extends Model implements HasMedia
              ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 
         // Multi-file "gallery"
-        $this->addMediaCollection('image_gallery')
+        $this->addMediaCollection('gallery')
              ->useDisk($disk)
              ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 
@@ -66,17 +63,7 @@ class Post extends Model implements HasMedia
         $this->addMediaCollection('carousel_samples')
              ->useDisk($disk)
              ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
-
-          //Multi-file video gallery
-          // Videos
-          $this->addMediaCollection('video_gallery')
-               // EITHER: use a closure that type-hints Spatie's File
-               ->acceptsFile(function (File $file) {
-                    // basic example: allow only mp4 and mov up to 500 MB
-                    return in_array($file->mimeType, ['video/mp4','video/quicktime'])
-                         && $file->size <= 500 * 1024 * 1024;
-               })
-               ->useDisk($disk);  // adjust disk as needed
+          
     }
 
     /**
